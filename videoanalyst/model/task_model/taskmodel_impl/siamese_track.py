@@ -55,9 +55,14 @@ class SiamTrack(ModuleBase):
 
         # transformer
         self.use_transformer = True
-        self.pos_encoding = build_position_encoding(d_model=256, position_embedding='sine')
-        self.input_proj = nn.Conv2d(256, 256, kernel_size=1)  # 其实可以没有这个
-        self.feature_fusion = FeatureFusionNetwork(d_model=256, nhead=8, num_featurefusion_layers=4, dim_feedforward=2048, dropout=0.1)
+        if self.use_transformer:
+            self.pos_encoding = build_position_encoding(d_model=256, position_embedding='sine')
+            self.input_proj = nn.Conv2d(256, 256, kernel_size=1)  # 其实可以没有这个
+            self.feature_fusion = FeatureFusionNetwork(d_model=256, nhead=8, num_featurefusion_layers=4,
+                                                       dim_feedforward=2048, dropout=0.1)
+            channels = self._hyper_params['head_width']
+            self.conv_to_reg = conv_bn_relu(channels, channels, 1, 5, 0, has_relu=False)
+            self.conv_to_cls = conv_bn_relu(channels, channels, 1, 5, 0, has_relu=False)
 
     @property
     def phase(self):
@@ -72,50 +77,58 @@ class SiamTrack(ModuleBase):
         target_img = training_data["im_z"]
         search_img = training_data["im_x"]
 
-        if not isinstance(target_img, NestedTensor):
-            target_img = nested_tensor_from_tensor(target_img)
-        if not isinstance(search_img, NestedTensor):
-            search_img = nested_tensor_from_tensor(search_img)
+        if self.use_transformer:
+            target_img_nested = nested_tensor_from_tensor(target_img)
+            target_img = target_img_nested.tensors
+            search_img_nested = nested_tensor_from_tensor(search_img)
+            search_img = search_img_nested.tensors
+
 
         # backbone feature
-        f_z = self.basemodel(target_img.tensors)
-        f_x = self.basemodel(search_img.tensors)
+        f_z = self.basemodel(target_img)
+        f_x = self.basemodel(search_img)
 
-        # transformer
-        # mask
-        mask_z = F.interpolate(target_img.mask[None].float(), size=f_z.shape[-2:]).to(torch.bool)[0]
-        mask_x = F.interpolate(search_img.mask[None].float(), size=f_x.shape[-2:]).to(torch.bool)[0]
-        # position encoding
-        pos_z = []
-        pos_z.append(self.pos_encoding(NestedTensor(f_z, mask_z)).to(f_z.dtype))
-        pos_x = []
-        pos_x.append(self.pos_encoding(NestedTensor(f_x, mask_x)).to(f_x.dtype))
+        if self.use_transformer:
+            # transformer
+            # mask
+            mask_z = F.interpolate(target_img_nested.mask[None].float(), size=f_z.shape[-2:]).to(torch.bool)[0]
+            mask_x = F.interpolate(search_img_nested.mask[None].float(), size=f_x.shape[-2:]).to(torch.bool)[0]
+            # position encoding
+            pos_z = []
+            pos_z.append(self.pos_encoding(NestedTensor(f_z, mask_z)).to(f_z.dtype))
+            pos_x = []
+            pos_x.append(self.pos_encoding(NestedTensor(f_x, mask_x)).to(f_x.dtype))
 
-        assert mask_z is not None
-        assert mask_x is not None
+            assert mask_z is not None
+            assert mask_x is not None
 
-        # 使用transformer进行特征融合的话
-        # f_z和f_x会提前融合成一个特征图
-        # 然后微调成cls和reg两个分支
-        # 比原来少了两个分支
+            # 使用transformer进行特征融合的话
+            # f_z和f_x会提前融合成一个特征图
+            # 然后微调成cls和reg两个分支
+            # 比原来少了两个分支
 
-        # feature enhance and fuse
-        hs = self.feature_fusion(self.input_proj(f_z), mask_z, self.input_proj(f_x), mask_x, pos_z[-1], pos_x[-1])
+            # feature enhance and fuse
+            f_fused = self.feature_fusion(self.input_proj(f_z), mask_z,
+                                     self.input_proj(f_x), mask_x,
+                                     pos_z[-1], pos_x[-1])  # [1, 2, 256, 625]
 
-        f = hs.permute(1,2,0,3).reshape(f_z.shape)
-        f_r = self.input_proj(f)
-        f_z = self.input_proj(f)
+            f_fused = f_fused.permute(1, 2, 0, 3).reshape(f_x.shape)
 
+            # 生成回归和分类分支特征
+            # feature adjust
+            c_out = self.conv_to_cls(f_fused)
+            r_out = self.conv_to_reg(f_fused)
 
-        # feature adjustment
-        #
-        c_z_k = self.c_z_k(f_z)
-        r_z_k = self.r_z_k(f_z)
-        c_x = self.c_x(f_x)
-        r_x = self.r_x(f_x)
-        # feature matching
-        r_out = xcorr_depthwise(r_x, r_z_k)
-        c_out = xcorr_depthwise(c_x, c_z_k)
+        else:
+            # feature adjustment
+            c_z_k = self.c_z_k(f_z)
+            r_z_k = self.r_z_k(f_z)
+            c_x = self.c_x(f_x)
+            r_x = self.r_x(f_x)
+            # feature matching
+            r_out = xcorr_depthwise(r_x, r_z_k)
+            c_out = xcorr_depthwise(c_x, c_z_k)
+
         # head
         fcos_cls_score_final, fcos_ctr_score_final, fcos_bbox_final, corr_fea = self.head(
             c_out, r_out)
