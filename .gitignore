@@ -138,9 +138,9 @@ lastest
 detetction
 
 *.pth
+*.txt
 
 dump
 datasets
 snapshots
 .idea
-*.txt
