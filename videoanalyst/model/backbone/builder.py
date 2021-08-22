@@ -8,6 +8,8 @@ from videoanalyst.utils import merge_cfg_into_hps
 
 from .backbone_base import TASK_BACKBONES
 
+from videoanalyst.model.task_model.taskmodel_impl.transformer.utils import build_position_encoding, Joiner
+
 
 def build(task: str, cfg: CfgNode, basemodel=None):
     r"""

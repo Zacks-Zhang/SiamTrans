@@ -25,7 +25,7 @@ data:
         max_diff: 100
         ratio: 1.0
         subset: train
-        unfixed_list: D:\Workspace\Code\Python\Tracking\SiamFC++\videoanalyst\data\dataset\dataset_impl\utils/unfixed_got10k_list.txt
+        unfixed_list: D:\Workspace\Code\Python\Tracking\SiamFCpp\videoanalyst\data\dataset\dataset_impl\utils/unfixed_got10k_list.txt
       LaSOTDataset:
         check_integrity: true
         dataset_root: datasets/LaSOT
@@ -46,7 +46,7 @@ data:
       names: []
   exp_name: siamfcpp_googlenet-fulldata
   exp_save: snapshots
-  minibatch: 4
+  minibatch: 2
   nr_image_per_epoch: 150000
   num_epochs: 20
   num_workers: 8
@@ -80,7 +80,7 @@ data:
           max_diff: 100
           ratio: 0.2
           subset: train
-          unfixed_list: D:\Workspace\Code\Python\Tracking\SiamFC++\videoanalyst\data\dataset\dataset_impl\utils/unfixed_got10k_list.txt
+          unfixed_list: D:\Workspace\Code\Python\Tracking\SiamFCpp\videoanalyst\data\dataset\dataset_impl\utils/unfixed_got10k_list.txt
         LaSOTDataset:
           check_integrity: false
           dataset_root: datasets/LaSOT
@@ -252,7 +252,7 @@ optim:
         19 }
 
         '
-      minibatch: 4
+      minibatch: 2
       momentum: 0.9
       nr_image_per_epoch: 150000
       weight_decay: 0.0001
@@ -523,7 +523,7 @@ trainer:
     exp_name: siamfcpp_googlenet-fulldata
     exp_save: snapshots
     max_epoch: 20
-    minibatch: 4
+    minibatch: 2
     nr_image_per_epoch: 150000
     snapshot: ''
   monitors:

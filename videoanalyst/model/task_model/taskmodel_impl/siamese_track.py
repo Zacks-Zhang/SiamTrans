@@ -3,14 +3,17 @@
 from loguru import logger
 
 import torch
+import torch.nn.functional as F
+from torch import nn
 
 from videoanalyst.model.common_opr.common_block import (conv_bn_relu,
                                                         xcorr_depthwise)
 from videoanalyst.model.module_base import ModuleBase
 from videoanalyst.model.task_model.taskmodel_base import (TRACK_TASKMODELS,
                                                           VOS_TASKMODELS)
-
-from videoanalyst.model.task_model.taskmodel_impl.featurefusion_network import FeatureFusionNetwork
+from videoanalyst.model.task_model.taskmodel_impl.transformer.featurefusion_network import FeatureFusionNetwork
+from videoanalyst.model.task_model.taskmodel_impl.transformer.utils import build_position_encoding, \
+    nested_tensor_from_tensor, NestedTensor
 
 torch.set_printoptions(precision=8)
 
@@ -49,8 +52,12 @@ class SiamTrack(ModuleBase):
         self.trt_fea_model = None
         self.trt_track_model = None
         self._phase = "train"
-        self.use_transformer = True
 
+        # transformer
+        self.use_transformer = True
+        self.pos_encoding = build_position_encoding(d_model=256, position_embedding='sine')
+        self.input_proj = nn.Conv2d(256, 256, kernel_size=1)  # 其实可以没有这个
+        self.feature_fusion = FeatureFusionNetwork(d_model=256, nhead=8, num_featurefusion_layers=4, dim_feedforward=2048, dropout=0.1)
 
     @property
     def phase(self):
@@ -64,16 +71,40 @@ class SiamTrack(ModuleBase):
     def train_forward(self, training_data):
         target_img = training_data["im_z"]
         search_img = training_data["im_x"]
+
+        if not isinstance(target_img, NestedTensor):
+            target_img = nested_tensor_from_tensor(target_img)
+        if not isinstance(search_img, NestedTensor):
+            search_img = nested_tensor_from_tensor(search_img)
+
         # backbone feature
-        f_z = self.basemodel(target_img)
-        f_x = self.basemodel(search_img)
-        print(f_z.shape)
+        f_z = self.basemodel(target_img.tensors)
+        f_x = self.basemodel(search_img.tensors)
+
+        # transformer
+        # mask
+        mask_z = F.interpolate(target_img.mask[None].float(), size=f_z.shape[-2:]).to(torch.bool)[0]
+        mask_x = F.interpolate(search_img.mask[None].float(), size=f_x.shape[-2:]).to(torch.bool)[0]
+        # position encoding
+        pos_z = []
+        pos_z.append(self.pos_encoding(NestedTensor(f_z, mask_z)).to(f_z.dtype))
+        pos_x = []
+        pos_x.append(self.pos_encoding(NestedTensor(f_x, mask_x)).to(f_x.dtype))
+
+        assert mask_z is not None
+        assert mask_x is not None
+
         # 使用transformer进行特征融合的话
         # f_z和f_x会提前融合成一个特征图
         # 然后微调成cls和reg两个分支
         # 比原来少了两个分支
 
+        # feature enhance and fuse
+        hs = self.feature_fusion(self.input_proj(f_z), mask_z, self.input_proj(f_x), mask_x, pos_z[-1], pos_x[-1])
 
+        f = hs.permute(1,2,0,3).reshape(f_z.shape)
+        f_r = self.input_proj(f)
+        f_z = self.input_proj(f)
 
 
         # feature adjustment
