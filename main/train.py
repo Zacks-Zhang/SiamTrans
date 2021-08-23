@@ -23,8 +23,8 @@ cv2.setNumThreads(4)
 
 # pytorch reproducibility
 # https://pytorch.org/docs/stable/notes/randomness.html#cudnn
-torch.backends.cudnn.benchmark = False
-torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = True
+torch.backends.cudnn.deterministic = False
 
 
 def make_parser():

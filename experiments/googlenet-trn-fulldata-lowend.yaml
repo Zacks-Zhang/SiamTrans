@@ -31,31 +31,18 @@ test:
         penalty_k: 0.04
         num_conv3x3: 2
     tester:
-      names: [
-#          "VOTTester",
-#          "TrackingNetTester",
-          "GOT10kTester"
-      ] # (VOTTester|GOT10kTester|LaSOTTester|OTBTester)
+      names: ["VOTTester", "TrackingNetTester"] # (VOTTester|GOT10kTester|LaSOTTester)
       VOTTester:
         exp_name: *TEST_NAME
         exp_save: *TEST_SAVE
         device_num: 1
         dataset_names: ["VOT2018"]
+      names: ["TrackingNetTester",]
       TrackingNetTester:
         exp_name: *TEST_NAME
         exp_save: *TEST_SAVE
         device_num: 1
         subsets: ["test"]  # (train|test|train0,1,...)
-      GOT10kTester:
-        exp_name: *TEST_NAME
-        exp_save: *TEST_SAVE
-        device_num: 1
-        subsets: [ "test" ]  # (train|test|train0,1,...)
-      OTBTester:
-        exp_name: *TEST_NAME
-        exp_save: *TEST_SAVE
-        device_num: 1
-        subsets: [ "OTB100" ]
 train:
   track:
     exp_name: &TRAIN_NAME "siamfcpp_googlenet-fulldata"
@@ -100,7 +87,7 @@ train:
       exp_name: *TRAIN_NAME
       exp_save: *TRAIN_SAVE
       num_epochs: &NUM_EPOCHS 20
-      minibatch: &MINIBATCH 32
+      minibatch: &MINIBATCH 2
       num_workers: 8 # 32
       nr_image_per_epoch: &NR_IMAGE_PER_EPOCH 150000
       pin_memory: false
