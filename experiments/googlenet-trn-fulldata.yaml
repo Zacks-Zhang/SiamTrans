@@ -22,7 +22,7 @@ test:
       task_model:
         name: "SiamTrack"
         SiamTrack:
-          pretrain_model_path: "snapshots/siamfcpp_googlenet-fulldata/epoch-19.pkl"
+          pretrain_model_path: "snapshots/siamfcpp_googlenet-fulldata/epoch-0.pkl"
     pipeline:
       name: "SiamFCppTracker"
       SiamFCppTracker:
@@ -203,15 +203,17 @@ train:
             {
             "name": "LinearLR",
             "start_lr": 0.000001,
-            "end_lr": 0.08,
+#            "end_lr": 0.08,
+            "end_lr": 0.001,
             "max_epoch": 1
             }
           - >
             {
             "name": "CosineLR",
-            "start_lr": 0.08,
+#            "start_lr": 0.08,
+            "start_lr": 0.01,
             "end_lr": 0.000001,
-            "max_epoch": 19
+            "max_epoch": 39
             }
           lr_multiplier:
           - >
