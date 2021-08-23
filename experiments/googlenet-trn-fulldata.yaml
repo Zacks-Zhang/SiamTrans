@@ -34,7 +34,8 @@ test:
       names: [
 #          "VOTTester",
 #          "TrackingNetTester",
-          "GOT10kTester"
+#          "GOT10kTester",
+          "OTBTester"
       ] # (VOTTester|GOT10kTester|LaSOTTester|OTBTester)
       VOTTester:
         exp_name: *TEST_NAME
@@ -55,7 +56,7 @@ test:
         exp_name: *TEST_NAME
         exp_save: *TEST_SAVE
         device_num: 1
-        subsets: [ "OTB100" ]
+        subsets: [ "otb100" ]
 train:
   track:
     exp_name: &TRAIN_NAME "siamfcpp_googlenet-fulldata"
@@ -99,7 +100,7 @@ train:
     data:
       exp_name: *TRAIN_NAME
       exp_save: *TRAIN_SAVE
-      num_epochs: &NUM_EPOCHS 20
+      num_epochs: &NUM_EPOCHS 40
       minibatch: &MINIBATCH 32
       num_workers: 8 # 32
       nr_image_per_epoch: &NR_IMAGE_PER_EPOCH 150000

@@ -65,8 +65,8 @@ class OTB(object):
         2015: __otb15_seqs,
         'otb2013': __otb13_seqs,
         'otb2015': __otb15_seqs,
-        'tb50': __tb50_seqs,
-        'tb100': __tb100_seqs
+        'otb50': __tb50_seqs,
+        'otb100': __tb100_seqs
     }
 
     def __init__(self, root_dir, version=2015, download=True):
