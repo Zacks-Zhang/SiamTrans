@@ -13,7 +13,7 @@ from videoanalyst.model.task_model.taskmodel_base import (TRACK_TASKMODELS,
                                                           VOS_TASKMODELS)
 from videoanalyst.model.task_model.taskmodel_impl.transformer.featurefusion_network import FeatureFusionNetwork
 from videoanalyst.model.task_model.taskmodel_impl.transformer.utils import build_position_encoding, \
-    nested_tensor_from_tensor, NestedTensor
+    nested_tensor_from_tensor, nested_tensor_from_tensor_2, NestedTensor
 
 torch.set_printoptions(precision=8)
 
@@ -188,12 +188,25 @@ class SiamTrack(ModuleBase):
                 out_list = self.trt_fea_model(target_img)
             else:
                 # backbone feature
+                if self.use_transformer:
+                    target_img_nested = nested_tensor_from_tensor_2(target_img)
+                    target_img = target_img_nested.tensors
                 f_z = self.basemodel(target_img)
-                # template as kernel
-                c_z_k = self.c_z_k(f_z)
-                r_z_k = self.r_z_k(f_z)
-                # output
-                out_list = [c_z_k, r_z_k]
+
+                if self.use_transformer:
+                    # transformer
+                    # mask
+                    mask_z = F.interpolate(target_img_nested.mask[None].float(), size=f_z.shape[-2:]).to(torch.bool)[0]
+                    # position encoding
+                    pos_z = []
+                    pos_z.append(self.pos_encoding(NestedTensor(f_z, mask_z)).to(f_z.dtype))
+                    out_list = [NestedTensor(f_z, mask_z), pos_z]
+                else:
+                    # template as kernel
+                    c_z_k = self.c_z_k(f_z)
+                    r_z_k = self.r_z_k(f_z)
+                    # output
+                    out_list = [c_z_k, r_z_k]
         # used for template feature extraction (trt mode)
         elif phase == "freeze_track_fea":
             search_img, = args
@@ -215,24 +228,56 @@ class SiamTrack(ModuleBase):
         # used for tracking one frame during test
         elif phase == 'track':
             if len(args) == 3:
-                search_img, c_z_k, r_z_k = args
+                if self.use_transformer:
+                    search_img, f_z_nested, pos_z = args
+                else:
+                    search_img, c_z_k, r_z_k = args
                 if self._hyper_params["trt_mode"]:
                     c_x, r_x = self.trt_track_model(search_img)
                 else:
+                    if self.use_transformer:
+                        search_img_nested = nested_tensor_from_tensor_2(search_img)
+                        search_img = search_img_nested.tensors
                     # backbone feature
+                    f_z = f_z_nested.tensors
                     f_x = self.basemodel(search_img)
-                    # feature adjustment
-                    c_x = self.c_x(f_x)
-                    r_x = self.r_x(f_x)
+
+                    if self.use_transformer:
+                        mask_z = f_z_nested.mask
+                        mask_x = F.interpolate(search_img_nested.mask[None].float(), size=f_x.shape[-2:]).to(torch.bool)[0]
+                        # position encoding
+                        pos_x = []
+                        pos_x.append(self.pos_encoding(NestedTensor(f_x, mask_x)).to(f_x.dtype))
+
+                        assert mask_z is not None
+                        assert mask_x is not None
+                    else:
+                        # feature adjustment
+                        c_x = self.c_x(f_x)
+                        r_x = self.r_x(f_x)
             elif len(args) == 4:
                 # c_x, r_x already computed
                 c_z_k, r_z_k, c_x, r_x = args
             else:
                 raise ValueError("Illegal args length: %d" % len(args))
 
-            # feature matching
-            r_out = xcorr_depthwise(r_x, r_z_k)
-            c_out = xcorr_depthwise(c_x, c_z_k)
+            if self.use_transformer:
+                # feature enhance and fuse
+                f_fused = self.feature_fusion(self.input_proj(f_z), mask_z,
+                                              self.input_proj(f_x), mask_x,
+                                              pos_z[-1], pos_x[-1])  # [1, 2, 256, 625]
+
+                f_fused = f_fused.permute(1, 2, 0, 3).reshape(f_x.shape)
+
+                # 生成回归和分类分支特征
+                # feature adjust
+                c_out = self.conv_to_cls(f_fused)
+                r_out = self.conv_to_reg(f_fused)
+            else:
+                # feature matching
+                r_out = xcorr_depthwise(r_x, r_z_k)
+                c_out = xcorr_depthwise(c_x, c_z_k)
+
             # head
             fcos_cls_score_final, fcos_ctr_score_final, fcos_bbox_final, corr_fea = self.head(
                 c_out, r_out, search_img.size(-1))
@@ -242,8 +287,11 @@ class SiamTrack(ModuleBase):
             # apply centerness correction
             fcos_score_final = fcos_cls_prob_final * fcos_ctr_prob_final
             # register extra output
-            extra = dict(c_x=c_x, r_x=r_x, corr_fea=corr_fea)
-            self.cf = c_x
+            if self.use_transformer:
+                extra = dict(corr_fea=f_fused)
+            else:
+                extra = dict(c_x=c_x, r_x=r_x, corr_fea=corr_fea)
+                self.cf = c_x
             # output
             out_list = fcos_score_final, fcos_bbox_final, fcos_cls_prob_final, fcos_ctr_prob_final, extra
         else:
