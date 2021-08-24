@@ -1,6 +1,6 @@
 test:
   track:
-    exp_name: &TEST_NAME "siamfcpp_googlenet-fulldata"
+    exp_name: &TEST_NAME "siamfcpp_googlenet-fulldata-trans"
     exp_save: &TEST_SAVE "logs"
     model:
       backbone:
@@ -22,7 +22,7 @@ test:
       task_model:
         name: "SiamTrack"
         SiamTrack:
-          pretrain_model_path: "snapshots/siamfcpp_googlenet-fulldata/epoch-19.pkl"
+          pretrain_model_path: "snapshots/siamfcpp_googlenet-fulldata/epoch-18.pkl"
     pipeline:
       name: "SiamFCppTracker"
       SiamFCppTracker:
@@ -59,8 +59,8 @@ test:
         subsets: [ "otb100" ]
 train:
   track:
-    exp_name: &TRAIN_NAME "siamfcpp_googlenet-fulldata"
-    exp_save: &TRAIN_SAVE "snapshots"
+    exp_name: &TRAIN_NAME "siamfcpp_googlenet-fulldata-trans"
+    exp_save: &TRAIN_SAVE "snapshots/trans"
     num_processes: 1
     model:
       backbone:
@@ -97,7 +97,7 @@ train:
         SiamTrack:
           pretrain_model_path: ""
 
-    use_transformer: False
+    use_transformer: True
 # ==================================================
     data:
       exp_name: *TRAIN_NAME

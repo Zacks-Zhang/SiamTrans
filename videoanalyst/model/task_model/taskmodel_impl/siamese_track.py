@@ -40,7 +40,9 @@ class SiamTrack(ModuleBase):
                                 trt_mode=False,
                                 trt_fea_model_path="",
                                 trt_track_model_path="",
-                                amp=False)
+                                amp=False,
+                                use_transformer=False
+                                )
 
     support_phases = ["train", "feature", "track", "freeze_track_fea"]
 
@@ -54,15 +56,8 @@ class SiamTrack(ModuleBase):
         self._phase = "train"
 
         # transformer
-        self.use_transformer = True
-        if self.use_transformer:
-            self.pos_encoding = build_position_encoding(d_model=256, position_embedding='sine')
-            self.input_proj = nn.Conv2d(256, 256, kernel_size=1)  # 其实可以没有这个
-            self.feature_fusion = FeatureFusionNetwork(d_model=256, nhead=8, num_featurefusion_layers=4,
-                                                       dim_feedforward=2048, dropout=0.1)
-            channels = self._hyper_params['head_width']
-            self.conv_to_reg = conv_bn_relu(channels, channels, 1, 5, 0, has_relu=False)
-            self.conv_to_cls = conv_bn_relu(channels, channels, 1, 5, 0, has_relu=False)
+        self.use_transformer = self._hyper_params['use_transformer']
+
 
     @property
     def phase(self):
@@ -238,8 +233,9 @@ class SiamTrack(ModuleBase):
                     if self.use_transformer:
                         search_img_nested = nested_tensor_from_tensor_2(search_img)
                         search_img = search_img_nested.tensors
+                        f_z = f_z_nested.tensors
+
                     # backbone feature
-                    f_z = f_z_nested.tensors
                     f_x = self.basemodel(search_img)
 
                     if self.use_transformer:
@@ -316,6 +312,17 @@ class SiamTrack(ModuleBase):
             self.trt_track_model.load_state_dict(
                 torch.load(self._hyper_params["trt_track_model_path"]))
             logger.info("loading trt model succefully")
+
+
+        if self.use_transformer:
+            self.pos_encoding = build_position_encoding(d_model=256, position_embedding='sine')
+            self.input_proj = nn.Conv2d(256, 256, kernel_size=1)  # 其实可以没有这个
+            self.feature_fusion = FeatureFusionNetwork(d_model=256, nhead=8, num_featurefusion_layers=4,
+                                                       dim_feedforward=2048, dropout=0.1)
+            channels = self._hyper_params['head_width']
+            self.conv_to_reg = conv_bn_relu(channels, channels, 1, 5, 0, has_relu=False)
+            self.conv_to_cls = conv_bn_relu(channels, channels, 1, 5, 0, has_relu=False)
+
 
     def _make_convs(self):
         head_width = self._hyper_params['head_width']
