@@ -204,7 +204,7 @@ train:
             {
             "name": "LinearLR",
             "start_lr": 0.000001,
-            "end_lr": 0.001,
+            "end_lr": 0.01,
             "max_epoch": 1
             }
           - >
