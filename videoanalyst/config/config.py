@@ -53,9 +53,6 @@ for task in task_list:
     train_cfg[task]["optim"] = get_optim_cfg()
     train_cfg[task]["trainer"] = get_trainer_cfg(task_list)[task]
 
-    # transformer
-    train_cfg[task]["use_transformer"] = False
-
 
 def specify_task(cfg: CfgNode) -> (str, CfgNode):
     r"""

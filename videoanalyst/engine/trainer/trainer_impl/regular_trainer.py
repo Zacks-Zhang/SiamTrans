@@ -96,7 +96,11 @@ class RegularTrainer(TrainerBase):
 
             # forward propagation
             with Timer(name="fwd", output_dict=time_dict):
-                predict_data = self._model(training_data)
+
+                if self._model._hyper_params["show_featuremap"]:
+                    predict_data, visualized_data = self._model(training_data)
+                else:
+                   predict_data = self._model(training_data)
                 training_losses, extras = OrderedDict(), OrderedDict()
                 for loss_name, loss in self._losses.items():
                     training_losses[loss_name], extras[loss_name] = loss(
@@ -122,7 +126,9 @@ class RegularTrainer(TrainerBase):
 
             for monitor in self._monitors:
                 monitor.update(trainer_data)
-            del training_data
+            if self._model._hyper_params["show_featuremap"]:
+                self._monitors[1].update_pic(visualized_data)
+            del training_data, visualized_data
             print_str = self._state["print_str"]
             pbar.set_description(print_str)
 

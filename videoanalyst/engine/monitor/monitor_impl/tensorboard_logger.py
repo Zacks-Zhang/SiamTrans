@@ -76,6 +76,32 @@ class TensorboardLogger(MonitorBase):
         # traverse engine_data and put to scalar
         self._add_scalar_recursively(writer, engine_data, "", global_step)
 
+    def update_pic(self, pic_data: Dict):
+        # from engine state calculate global step
+        engine_state = self._state["engine_state"]
+        epoch = engine_state["epoch"]
+        max_epoch = engine_state["max_epoch"]
+        iteration = engine_state["iteration"]
+        max_iteration = engine_state["max_iteration"]
+        global_step = iteration + epoch * max_iteration
+
+        # build at first update
+        if self._state["writer"] is None:
+            self._build_writer(global_step=global_step)
+            logger.info(
+                "Tensorboard writer built, starts recording from global_step=%d"
+                % global_step, )
+            logger.info(
+                "epoch=%d, max_epoch=%d, iteration=%d, max_iteration=%d" %
+                (epoch, max_epoch, iteration, max_iteration))
+        writer = self._state["writer"]
+
+        # traverse engine_data and put to scalar
+        writer.add_image("fused feature", pic_data["fused"], global_step=global_step, dataformats="CHW")
+        writer.add_image("origin template pic", pic_data["origin_z"], global_step=global_step, dataformats="NCHW")
+        writer.add_image("origin search pic", pic_data["origin_x"], global_step=global_step, dataformats="NCHW")
+
+
     def _build_writer(self, global_step=0):
         log_dir = self._hyper_params["log_dir"]
         ensure_dir(log_dir)

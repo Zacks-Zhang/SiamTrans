@@ -6,6 +6,8 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
+import torchvision.utils as vutils
+
 from videoanalyst.model.common_opr.common_block import (conv_bn_relu,
                                                         xcorr_depthwise)
 from videoanalyst.model.module_base import ModuleBase
@@ -41,7 +43,8 @@ class SiamTrack(ModuleBase):
                                 trt_fea_model_path="",
                                 trt_track_model_path="",
                                 amp=False,
-                                use_transformer=False
+                                use_transformer=False,
+                                show_featuremap=False
                                 )
 
     support_phases = ["train", "feature", "track", "freeze_track_fea"]
@@ -54,9 +57,6 @@ class SiamTrack(ModuleBase):
         self.trt_fea_model = None
         self.trt_track_model = None
         self._phase = "train"
-
-        # transformer
-        self.use_transformer = self._hyper_params['use_transformer']
 
 
     @property
@@ -72,7 +72,7 @@ class SiamTrack(ModuleBase):
         target_img = training_data["im_z"]
         search_img = training_data["im_x"]
 
-        if self.use_transformer:
+        if self._hyper_params['use_transformer']:
             target_img_nested = nested_tensor_from_tensor(target_img)
             target_img = target_img_nested.tensors
             search_img_nested = nested_tensor_from_tensor(search_img)
@@ -83,7 +83,7 @@ class SiamTrack(ModuleBase):
         f_z = self.basemodel(target_img)
         f_x = self.basemodel(search_img)
 
-        if self.use_transformer:
+        if self._hyper_params['use_transformer']:
             # transformer
             # mask
             mask_z = F.interpolate(target_img_nested.mask[None].float(), size=f_z.shape[-2:]).to(torch.bool)[0]
@@ -134,6 +134,14 @@ class SiamTrack(ModuleBase):
         )
         if self._hyper_params["corr_fea_output"]:
             predict_data["corr_fea"] = corr_fea
+
+        if self._hyper_params["show_featuremap"]:
+            visualized_data = {}
+            img_grids = vutils.make_grid(f_fused[0, :, :, :].unsqueeze(0).permute(1, 0, 2, 3), normalize=True, scale_each=True, nrow=4, padding=1)
+            visualized_data["fused"] = img_grids
+            visualized_data["origin_z"] = target_img
+            visualized_data["origin_x"] = search_img
+            return predict_data, visualized_data
         return predict_data
 
     def instance(self, img):
@@ -183,12 +191,12 @@ class SiamTrack(ModuleBase):
                 out_list = self.trt_fea_model(target_img)
             else:
                 # backbone feature
-                if self.use_transformer:
+                if self._hyper_params['use_transformer']:
                     target_img_nested = nested_tensor_from_tensor_2(target_img)
                     target_img = target_img_nested.tensors
                 f_z = self.basemodel(target_img)
 
-                if self.use_transformer:
+                if self._hyper_params['use_transformer']:
                     # transformer
                     # mask
                     mask_z = F.interpolate(target_img_nested.mask[None].float(), size=f_z.shape[-2:]).to(torch.bool)[0]
@@ -223,14 +231,14 @@ class SiamTrack(ModuleBase):
         # used for tracking one frame during test
         elif phase == 'track':
             if len(args) == 3:
-                if self.use_transformer:
+                if self._hyper_params['use_transformer']:
                     search_img, f_z_nested, pos_z = args
                 else:
                     search_img, c_z_k, r_z_k = args
                 if self._hyper_params["trt_mode"]:
                     c_x, r_x = self.trt_track_model(search_img)
                 else:
-                    if self.use_transformer:
+                    if self._hyper_params['use_transformer']:
                         search_img_nested = nested_tensor_from_tensor_2(search_img)
                         search_img = search_img_nested.tensors
                         f_z = f_z_nested.tensors
@@ -238,7 +246,7 @@ class SiamTrack(ModuleBase):
                     # backbone feature
                     f_x = self.basemodel(search_img)
 
-                    if self.use_transformer:
+                    if self._hyper_params['use_transformer']:
                         mask_z = f_z_nested.mask
                         mask_x = F.interpolate(search_img_nested.mask[None].float(), size=f_x.shape[-2:]).to(torch.bool)[0]
                         # position encoding
@@ -257,7 +265,7 @@ class SiamTrack(ModuleBase):
             else:
                 raise ValueError("Illegal args length: %d" % len(args))
 
-            if self.use_transformer:
+            if self._hyper_params['use_transformer']:
                 # feature enhance and fuse
                 f_fused = self.feature_fusion(self.input_proj(f_z), mask_z,
                                               self.input_proj(f_x), mask_x,
@@ -283,7 +291,7 @@ class SiamTrack(ModuleBase):
             # apply centerness correction
             fcos_score_final = fcos_cls_prob_final * fcos_ctr_prob_final
             # register extra output
-            if self.use_transformer:
+            if self._hyper_params['use_transformer']:
                 extra = dict(corr_fea=f_fused)
             else:
                 extra = dict(c_x=c_x, r_x=r_x, corr_fea=corr_fea)
@@ -314,7 +322,7 @@ class SiamTrack(ModuleBase):
             logger.info("loading trt model succefully")
 
 
-        if self.use_transformer:
+        if self._hyper_params['use_transformer']:
             self.pos_encoding = build_position_encoding(d_model=256, position_embedding='sine')
             self.input_proj = nn.Conv2d(256, 256, kernel_size=1)  # 其实可以没有这个
             self.feature_fusion = FeatureFusionNetwork(d_model=256, nhead=8, num_featurefusion_layers=4,
