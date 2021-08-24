@@ -322,6 +322,11 @@ class SiamTrack(ModuleBase):
             logger.info("loading trt model succefully")
 
 
+
+    def _make_convs(self):
+        head_width = self._hyper_params['head_width']
+
+        # transformer
         if self._hyper_params['use_transformer']:
             self.pos_encoding = build_position_encoding(d_model=256, position_embedding='sine')
             self.input_proj = nn.Conv2d(256, 256, kernel_size=1)  # 其实可以没有这个
@@ -330,10 +335,6 @@ class SiamTrack(ModuleBase):
             channels = self._hyper_params['head_width']
             self.conv_to_reg = conv_bn_relu(channels, channels, 1, 5, 0, has_relu=False)
             self.conv_to_cls = conv_bn_relu(channels, channels, 1, 5, 0, has_relu=False)
-
-
-    def _make_convs(self):
-        head_width = self._hyper_params['head_width']
 
         # feature adjustment
         self.r_z_k = conv_bn_relu(head_width, head_width, 1, 3, 0, has_relu=False)
