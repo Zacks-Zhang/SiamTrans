@@ -137,7 +137,7 @@ class SiamTrack(ModuleBase):
 
         if self._hyper_params["show_featuremap"]:
             visualized_data = {}
-            img_grids = vutils.make_grid(f_fused[0, :, :, :].unsqueeze(0).permute(1, 0, 2, 3), normalize=True, scale_each=True, nrow=4, padding=1)
+            img_grids = vutils.make_grid(c_out[0, :, :, :].unsqueeze(0).permute(1, 0, 2, 3), normalize=True, scale_each=True, nrow=4, padding=1)
             visualized_data["fused"] = img_grids
             visualized_data["origin_z"] = target_img
             visualized_data["origin_x"] = search_img

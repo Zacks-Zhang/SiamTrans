@@ -22,7 +22,9 @@ test:
       task_model:
         name: "SiamTrack"
         SiamTrack:
-          pretrain_model_path: "snapshots/siamfcpp_googlenet-fulldata/epoch-18.pkl"
+          pretrain_model_path: "snapshots/siamfcpp_googlenet-fulldata/epoch-10.pkl"
+          use_transformer: True
+
     pipeline:
       name: "SiamFCppTracker"
       SiamFCppTracker:
@@ -96,8 +98,8 @@ train:
         name: "SiamTrack"
         SiamTrack:
           pretrain_model_path: ""
+          use_transformer: True
 
-    use_transformer: True
 # ==================================================
     data:
       exp_name: *TRAIN_NAME
