@@ -96,8 +96,9 @@ train:
         name: "SiamTrack"
         SiamTrack:
           pretrain_model_path: ""
+          use_transformer: False
+          show_featuremap: True
 
-    use_transformer: False
 # ==================================================
     data:
       exp_name: *TRAIN_NAME

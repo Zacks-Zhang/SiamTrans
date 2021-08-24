@@ -23,6 +23,8 @@ test:
         name: "SiamTrack"
         SiamTrack:
           pretrain_model_path: "snapshots/siamfcpp_googlenet-fulldata/epoch-18.pkl"
+          use_transformer: True
+
     pipeline:
       name: "SiamFCppTracker"
       SiamFCppTracker:
@@ -208,7 +210,7 @@ train:
             "name": "LinearLR",
             "start_lr": 0.000001,
             "end_lr": 0.01,
-            "max_epoch": 1
+            "max_epoch": 10
             }
           - >
             {
