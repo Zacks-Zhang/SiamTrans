@@ -62,7 +62,7 @@ test:
 train:
   track:
     exp_name: &TRAIN_NAME "siamfcpp_googlenet-fulldata-trans"
-    exp_save: &TRAIN_SAVE "snapshots/trans"
+    exp_save: &TRAIN_SAVE "snapshots"
     num_processes: 1
     model:
       backbone:
