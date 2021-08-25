@@ -22,7 +22,7 @@ test:
       task_model:
         name: "SiamTrack"
         SiamTrack:
-          pretrain_model_path: "snapshots/siamfcpp_googlenet-fulldata/epoch-10.pkl"
+          pretrain_model_path: "snapshots/siamfcpp_googlenet-fulldata-trans/epoch-1.pkl"
           use_transformer: True
 
     pipeline:
@@ -34,10 +34,10 @@ test:
         num_conv3x3: 2
     tester:
       names: [
-#          "VOTTester",
+          "VOTTester",
 #          "TrackingNetTester",
 #          "GOT10kTester",
-          "OTBTester"
+#          "OTBTester"
       ] # (VOTTester|GOT10kTester|LaSOTTester|OTBTester)
       VOTTester:
         exp_name: *TEST_NAME

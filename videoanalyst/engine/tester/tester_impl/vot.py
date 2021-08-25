@@ -11,6 +11,7 @@ from typing import Dict
 
 import cv2
 import numpy as np
+from future.moves import sys
 from loguru import logger
 from tqdm import tqdm
 from yacs.config import CfgNode
@@ -47,8 +48,8 @@ class VOTTester(TesterBase):
     extra_hyper_params = dict(
         device_num=1,
         data_root=CfgNode(
-            dict(VOT2018="datasets/VOT/vot2018",
-                 VOT2019="datasets/VOT/vot2019")),
+            dict(VOT2018="datasets/VOT",
+                 VOT2019="datasets/VOT")),
         dataset_names=[
             "VOT2018",
         ],
@@ -106,7 +107,7 @@ class VOTTester(TesterBase):
         if self._hyper_params["video_name_list"]:
             keys = self._hyper_params["video_name_list"]
         nr_records = len(keys)
-        pbar = tqdm(total=nr_records)
+        pbar = tqdm(total=nr_records, position=0, leave=True, file=sys.stdout)
         mean_speed = -1
         total_lost = 0
         speed_list = []
@@ -240,7 +241,7 @@ class VOTTester(TesterBase):
         image_files, gt = video['image_files'], video['gt']
         start_frame, end_frame, lost_times, toc = 0, len(image_files), 0, 0
         track_num = 0
-        for f, image_file in enumerate(tqdm(image_files)):
+        for f, image_file in enumerate(tqdm(image_files, position=0, leave=True)):
             im = vot_benchmark.get_img(image_file)
             im.copy().astype(np.uint8)
 
