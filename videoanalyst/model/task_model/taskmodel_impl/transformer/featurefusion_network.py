@@ -45,6 +45,7 @@ class FeatureFusionNetwork(nn.Module):
         mask_temp = mask_temp.flatten(1)
         mask_search = mask_search.flatten(1)
 
+        # 先自注意力再交叉注意力
         memory_temp, memory_search = self.encoder(src1=src_temp, src2=src_search,
                                                   src1_key_padding_mask=mask_temp,
                                                   src2_key_padding_mask=mask_search,
@@ -55,6 +56,9 @@ class FeatureFusionNetwork(nn.Module):
         #                   memory_key_padding_mask=mask_temp,
         #                   pos_enc=pos_temp, pos_dec=pos_search)
         # return hs.unsqueeze(0).transpose(1, 2)
+
+        # 使用交叉注意力融合两个分支
+        # 不想要融合的话就不用decoder，直接返回上面两个增强过的分支
         return self.decoder(memory_search, memory_temp,
                           tgt_key_padding_mask=mask_search,
                           memory_key_padding_mask=mask_temp,
