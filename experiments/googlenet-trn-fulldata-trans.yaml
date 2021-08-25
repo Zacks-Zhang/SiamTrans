@@ -99,7 +99,7 @@ train:
         SiamTrack:
           pretrain_model_path: ""
           use_transformer: True
-          show_featuremap: False
+          show_featuremap: True
 
 # ==================================================
     data:

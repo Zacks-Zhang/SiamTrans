@@ -139,8 +139,8 @@ class SiamTrack(ModuleBase):
             visualized_data = {}
             img_grids = vutils.make_grid(c_out[0, :, :, :].unsqueeze(0).permute(1, 0, 2, 3), normalize=True, scale_each=True, nrow=4, padding=1)
             visualized_data["fused"] = img_grids
-            visualized_data["origin_z"] = target_img
-            visualized_data["origin_x"] = search_img
+            # visualized_data["origin_z"] = target_img
+            # visualized_data["origin_x"] = search_img
             return predict_data, visualized_data
         return predict_data
 

@@ -98,8 +98,8 @@ class TensorboardLogger(MonitorBase):
 
         # traverse engine_data and put to scalar
         writer.add_image("fused feature", pic_data["fused"], global_step=global_step, dataformats="CHW")
-        writer.add_image("origin template pic", pic_data["origin_z"], global_step=global_step, dataformats="NCHW")
-        writer.add_image("origin search pic", pic_data["origin_x"], global_step=global_step, dataformats="NCHW")
+        # writer.add_image("origin template pic", pic_data["origin_z"], global_step=global_step, dataformats="NCHW")
+        # writer.add_image("origin search pic", pic_data["origin_x"], global_step=global_step, dataformats="NCHW")
 
 
     def _build_writer(self, global_step=0):
