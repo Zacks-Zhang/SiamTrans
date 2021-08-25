@@ -99,7 +99,7 @@ train:
         SiamTrack:
           pretrain_model_path: ""
           use_transformer: True
-          show_featuremap: True
+          show_featuremap: False
 
 # ==================================================
     data:
@@ -209,13 +209,13 @@ train:
             {
             "name": "LinearLR",
             "start_lr": 0.000001,
-            "end_lr": 0.01,
+            "end_lr": 0.001,
             "max_epoch": 10
             }
           - >
             {
             "name": "CosineLR",
-            "start_lr": 0.01,
+            "start_lr": 0.001,
             "end_lr": 0.000001,
             "max_epoch": 39
             }

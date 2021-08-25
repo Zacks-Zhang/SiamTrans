@@ -128,7 +128,8 @@ class RegularTrainer(TrainerBase):
                 monitor.update(trainer_data)
             if self._model._hyper_params["show_featuremap"]:
                 self._monitors[1].update_pic(visualized_data)
-            del training_data, visualized_data
+                del visualized_data
+            del training_data
             print_str = self._state["print_str"]
             pbar.set_description(print_str)
 
