@@ -50,11 +50,15 @@ class FeatureFusionNetwork(nn.Module):
                                                   src2_key_padding_mask=mask_search,
                                                   pos_src1=pos_temp,
                                                   pos_src2=pos_search)
-        hs = self.decoder(memory_search, memory_temp,
+        # hs = self.decoder(memory_search, memory_temp,
+        #                   tgt_key_padding_mask=mask_search,
+        #                   memory_key_padding_mask=mask_temp,
+        #                   pos_enc=pos_temp, pos_dec=pos_search)
+        # return hs.unsqueeze(0).transpose(1, 2)
+        return self.decoder(memory_search, memory_temp,
                           tgt_key_padding_mask=mask_search,
                           memory_key_padding_mask=mask_temp,
                           pos_enc=pos_temp, pos_dec=pos_search)
-        return hs.unsqueeze(0).transpose(1, 2)
 
 
 class Decoder(nn.Module):

@@ -105,9 +105,9 @@ class SiamTrack(ModuleBase):
             # feature enhance and fuse
             f_fused = self.feature_fusion(f_z, mask_z,
                                      f_x, mask_x,
-                                     pos_z[-1], pos_x[-1])  # [1, 2, 256, 625]
+                                     pos_z[-1], pos_x[-1])  # [625, 2, 256]
 
-            f_fused = f_fused.permute(1, 2, 0, 3).reshape(f_x.shape)
+            f_fused = f_fused.permute(1, 2, 0).reshape(f_x.shape)
 
             # 生成回归和分类分支特征
             # feature adjust
@@ -271,7 +271,7 @@ class SiamTrack(ModuleBase):
                                               f_x, mask_x,
                                               pos_z[-1], pos_x[-1])  # [1, 2, 256, 625]
 
-                f_fused = f_fused.permute(1, 2, 0, 3).reshape(f_x.shape)
+                f_fused = f_fused.permute(1, 2, 0).reshape(f_x.shape)
 
                 # 生成回归和分类分支特征
                 # feature adjust
