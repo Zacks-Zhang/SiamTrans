@@ -101,14 +101,15 @@ class SiamTrack(ModuleBase):
             # f_z和f_x会提前融合成一个特征图
             # 然后微调成cls和reg两个分支
             # 比原来少了两个分支
-
+            f_z_shape = f_z.shape
+            f_x_shape = f_x.shape
             # feature enhance and fuse
             f_z, f_x = self.feature_fusion(f_z, mask_z,
                                      f_x, mask_x,
                                      pos_z[-1], pos_x[-1])  # [625, 2, 256]
 
-            f_z = f_z.permute(1, 2, 0).reshape(f_x.shape)
-            f_x = f_x.permute(1, 2, 0).reshape(f_x.shape)
+            f_z = f_z.permute(1, 2, 0).reshape(f_z_shape)
+            f_x = f_x.permute(1, 2, 0).reshape(f_x_shape)
 
         #     # 生成回归和分类分支特征
         #     # feature adjust
@@ -261,7 +262,7 @@ class SiamTrack(ModuleBase):
                                                        f_x, mask_x,
                                                        pos_z[-1], pos_x[-1])  # [625, 2, 256]
 
-                        f_z = f_z.permute(1, 2, 0).reshape(f_x.shape)
+                        f_z = f_z.permute(1, 2, 0).reshape(f_z.shape)
                         f_x = f_x.permute(1, 2, 0).reshape(f_x.shape)
 
                         c_z_k = self.c_z_k(f_z)
@@ -271,7 +272,7 @@ class SiamTrack(ModuleBase):
                     # feature adjustment
                     c_x = self.c_x(f_x)
                     r_x = self.r_x(f_x)
-                    
+
             elif len(args) == 4:
                 # c_x, r_x already computed
                 c_z_k, r_z_k, c_x, r_x = args
