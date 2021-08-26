@@ -3,6 +3,7 @@ from glob import glob
 
 import cv2
 import numpy as np
+from PIL import Image
 from loguru import logger
 from tqdm import tqdm
 
@@ -26,27 +27,36 @@ class VOTVideo(Video):
         size_change: size change
         occlusion: occlusion
     """
+
     def __init__(self, name, root, video_dir, init_rect, img_names, gt_rect,
-                 camera_motion, illum_change, motion_change, size_change,
-                 occlusion, width, height):
-        super(VOTVideo, self).__init__(name, root, video_dir, init_rect,
-                                       img_names, gt_rect, None)
-        self.tags = {'all': [1] * len(gt_rect)}
+            camera_motion, illum_change, motion_change, size_change, occlusion, load_img=False):
+        super(VOTVideo, self).__init__(name, root, video_dir,
+                init_rect, img_names, gt_rect, None, load_img)
+        self.tags= {'all': [1] * len(gt_rect)}
         self.tags['camera_motion'] = camera_motion
         self.tags['illum_change'] = illum_change
         self.tags['motion_change'] = motion_change
         self.tags['size_change'] = size_change
         self.tags['occlusion'] = occlusion
 
-        self.width = width
-        self.height = height
+        # TODO
+        # if len(self.gt_traj[0]) == 4:
+        #     self.gt_traj = [[x[0], x[1], x[0], x[1]+x[3]-1,
+        #                     x[0]+x[2]-1, x[1]+x[3]-1, x[0]+x[2]-1, x[1]]
+        #                         for x in self.gt_traj]
 
         # empty tag
         all_tag = [v for k, v in self.tags.items() if len(v) > 0]
-        self.tags['empty'] = np.all(1 - np.array(all_tag),
-                                    axis=1).astype(np.int32).tolist()
+        self.tags['empty'] = np.all(1 - np.array(all_tag), axis=1).astype(np.int32).tolist()
+        # self.tags['empty'] = np.all(1 - np.array(list(self.tags.values())),
+        #         axis=1).astype(np.int32).tolist()
 
         self.tag_names = list(self.tags.keys())
+        if not load_img:
+            img_name = os.path.join(os.path.abspath(root), os.path.abspath(self.img_names[0]))
+            img = np.array(Image.open(img_name), np.uint8)
+            self.width = img.shape[1]
+            self.height = img.shape[0]
 
     def select_tag(self, tag, start=0, end=0):
         if tag == 'empty':
@@ -93,30 +103,29 @@ class VOTDataset(Dataset):
         dataset_root: dataset root
         load_img: wether to load all imgs
     """
-    def __init__(self, name, dataset_root):
+    def __init__(self, name, dataset_root, load_img=False):
         super(VOTDataset, self).__init__(name, dataset_root)
-        try:
-            f = os.path.join(dataset_root, name + '.json')
-            meta_data = get_json(f)
-        except:
-            download_str = 'Please download json file from https://pan.baidu.com/s/1js0Qhykqqur7_lNRtle1tA#list/path=%2F or https://drive.google.com/drive/folders/10cfXjwQQBQeu48XMf2xc_W1LucpistPI\n'
-            logger.error("Can not open vot json file {}\n".format(f))
-            logger.error(download_str)
-            exit()
+
+        f = os.path.join(dataset_root, name + '.json')
+        meta_data = get_json(f)
 
         # load videos
         pbar = tqdm(meta_data.keys(), desc='loading ' + name, ncols=100)
         self.videos = {}
         for video in pbar:
             pbar.set_postfix_str(video)
-            self.videos[video] = VOTVideo(
-                video, dataset_root, meta_data[video]['video_dir'],
-                meta_data[video]['init_rect'], meta_data[video]['img_names'],
-                meta_data[video]['gt_rect'], meta_data[video]['camera_motion'],
-                meta_data[video]['illum_change'],
-                meta_data[video]['motion_change'],
-                meta_data[video]['size_change'], meta_data[video]['occlusion'],
-                meta_data[video]['width'], meta_data[video]['height'])
+            self.videos[video] = VOTVideo(video,
+                                          dataset_root,
+                                          meta_data[video]['video_dir'],
+                                          meta_data[video]['init_rect'],
+                                          meta_data[video]['img_names'],
+                                          meta_data[video]['gt_rect'],
+                                          meta_data[video]['camera_motion'],
+                                          meta_data[video]['illum_change'],
+                                          meta_data[video]['motion_change'],
+                                          meta_data[video]['size_change'],
+                                          meta_data[video]['occlusion'],
+                                          load_img=load_img)
 
         self.tags = [
             'all', 'camera_motion', 'illum_change', 'motion_change',

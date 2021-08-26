@@ -48,8 +48,8 @@ class VOTTester(TesterBase):
     extra_hyper_params = dict(
         device_num=1,
         data_root=CfgNode(
-            dict(VOT2018="datasets/VOT",
-                 VOT2019="datasets/VOT")),
+            dict(VOT2018="datasets/VOT/VOT2018",
+                 VOT2019="datasets/VOT/VOT2019")),
         dataset_names=[
             "VOT2018",
         ],

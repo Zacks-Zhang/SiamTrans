@@ -57,7 +57,8 @@ def get_dataset_zoo():
 def load_dataset(vot_path, dataset):
     info = OrderedDict()
     if 'VOT' in dataset:
-        base_path = join(vot_path, dataset)
+        # base_path = join(vot_path, dataset)
+        base_path = vot_path
         list_path = join(base_path, 'list.txt')
         f = get_txt(list_path)
         videos = [v.strip() for v in f.strip().split('\n')]
