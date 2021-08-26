@@ -103,26 +103,27 @@ class SiamTrack(ModuleBase):
             # 比原来少了两个分支
 
             # feature enhance and fuse
-            f_fused = self.feature_fusion(f_z, mask_z,
+            f_z, f_x = self.feature_fusion(f_z, mask_z,
                                      f_x, mask_x,
                                      pos_z[-1], pos_x[-1])  # [625, 2, 256]
 
-            f_fused = f_fused.permute(1, 2, 0).reshape(f_x.shape)
+            f_z = f_z.permute(1, 2, 0).reshape(f_x.shape)
+            f_x = f_x.permute(1, 2, 0).reshape(f_x.shape)
 
-            # 生成回归和分类分支特征
-            # feature adjust
-            c_out = self.conv_to_cls(f_fused)
-            r_out = self.conv_to_reg(f_fused)
-
-        else:
-            # feature adjustment
-            c_z_k = self.c_z_k(f_z)
-            r_z_k = self.r_z_k(f_z)
-            c_x = self.c_x(f_x)
-            r_x = self.r_x(f_x)
-            # feature matching
-            r_out = xcorr_depthwise(r_x, r_z_k)
-            c_out = xcorr_depthwise(c_x, c_z_k)
+        #     # 生成回归和分类分支特征
+        #     # feature adjust
+        #     c_out = self.conv_to_cls(f_fused)
+        #     r_out = self.conv_to_reg(f_fused)
+        #
+        # else:
+        # feature adjustment
+        c_z_k = self.c_z_k(f_z)
+        r_z_k = self.r_z_k(f_z)
+        c_x = self.c_x(f_x)
+        r_x = self.r_x(f_x)
+        # feature matching
+        r_out = xcorr_depthwise(r_x, r_z_k)
+        c_out = xcorr_depthwise(c_x, c_z_k)
 
         # head
         fcos_cls_score_final, fcos_ctr_score_final, fcos_bbox_final, corr_fea = self.head(
@@ -255,10 +256,22 @@ class SiamTrack(ModuleBase):
 
                         assert mask_z is not None
                         assert mask_x is not None
-                    else:
-                        # feature adjustment
-                        c_x = self.c_x(f_x)
-                        r_x = self.r_x(f_x)
+
+                        f_z, f_x = self.feature_fusion(f_z, mask_z,
+                                                       f_x, mask_x,
+                                                       pos_z[-1], pos_x[-1])  # [625, 2, 256]
+
+                        f_z = f_z.permute(1, 2, 0).reshape(f_x.shape)
+                        f_x = f_x.permute(1, 2, 0).reshape(f_x.shape)
+
+                        c_z_k = self.c_z_k(f_z)
+                        r_z_k = self.r_z_k(f_z)
+
+                    # else:
+                    # feature adjustment
+                    c_x = self.c_x(f_x)
+                    r_x = self.r_x(f_x)
+                    
             elif len(args) == 4:
                 # c_x, r_x already computed
                 c_z_k, r_z_k, c_x, r_x = args
@@ -266,21 +279,23 @@ class SiamTrack(ModuleBase):
                 raise ValueError("Illegal args length: %d" % len(args))
 
             if self._hyper_params['use_transformer']:
+                pass
                 # feature enhance and fuse
-                f_fused = self.feature_fusion(f_z, mask_z,
-                                              f_x, mask_x,
-                                              pos_z[-1], pos_x[-1])  # [1, 2, 256, 625]
+                # f_fused = self.feature_fusion(f_z, mask_z,
+                #                               f_x, mask_x,
+                #                               pos_z[-1], pos_x[-1])  # [1, 2, 256, 625]
 
-                f_fused = f_fused.permute(1, 2, 0).reshape(f_x.shape)
+                # f_fused = f_fused.permute(1, 2, 0).reshape(f_x.shape)
 
                 # 生成回归和分类分支特征
                 # feature adjust
-                c_out = self.conv_to_cls(f_fused)
-                r_out = self.conv_to_reg(f_fused)
-            else:
-                # feature matching
-                r_out = xcorr_depthwise(r_x, r_z_k)
-                c_out = xcorr_depthwise(c_x, c_z_k)
+                # c_out = self.conv_to_cls(f_fused)
+                # r_out = self.conv_to_reg(f_fused)
+            # else:
+
+            # feature matching
+            r_out = xcorr_depthwise(r_x, r_z_k)
+            c_out = xcorr_depthwise(c_x, c_z_k)
 
             # head
             fcos_cls_score_final, fcos_ctr_score_final, fcos_bbox_final, corr_fea = self.head(
@@ -291,11 +306,12 @@ class SiamTrack(ModuleBase):
             # apply centerness correction
             fcos_score_final = fcos_cls_prob_final * fcos_ctr_prob_final
             # register extra output
-            if self._hyper_params['use_transformer']:
-                extra = dict(corr_fea=f_fused)
-            else:
-                extra = dict(c_x=c_x, r_x=r_x, corr_fea=corr_fea)
-                self.cf = c_x
+
+            # if self._hyper_params['use_transformer']:
+            #     extra = dict(corr_fea=corr_fea)
+            # else:
+            extra = dict(c_x=c_x, r_x=r_x, corr_fea=corr_fea)
+            self.cf = c_x
             # output
             out_list = fcos_score_final, fcos_bbox_final, fcos_cls_prob_final, fcos_ctr_prob_final, extra
         else:
