@@ -59,7 +59,6 @@ class FeatureFusionNetwork(nn.Module):
 
         # 使用交叉注意力融合两个分支
         # 不想要融合的话就不用decoder，直接返回上面两个增强过的分支
-        return memory_temp, memory_search
         return self.decoder(memory_search, memory_temp,
                           tgt_key_padding_mask=mask_search,
                           memory_key_padding_mask=mask_temp,
