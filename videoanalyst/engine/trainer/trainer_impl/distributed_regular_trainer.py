@@ -35,7 +35,7 @@ class DistributedRegularTrainer(TrainerBase):
         snapshot="",
     )
 
-    def __init__(self, optimizer, dataloader, monitors=[]):
+    def __init__(self, optimizer, dataloader, monitors=[], gradcam=None):
         r"""
         Crete tester with config and pipeline
 
@@ -53,6 +53,7 @@ class DistributedRegularTrainer(TrainerBase):
         self._state["epoch"] = -1  # uninitialized
         self._state["initialized"] = False
         self._state["devices"] = torch.device("cuda:0")
+        self.gradcam = gradcam
 
     def init_train(self, ):
         torch.cuda.empty_cache()

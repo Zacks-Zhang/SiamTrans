@@ -16,6 +16,7 @@ from videoanalyst.engine import builder as engine_builder
 from videoanalyst.model import builder as model_builder
 from videoanalyst.optim import builder as optim_builder
 from videoanalyst.utils import Timer, ensure_dir
+from videoanalyst.utils.gradcam import GradCAM
 
 cv2.setNumThreads(4)
 
@@ -87,8 +88,10 @@ if __name__ == '__main__':
         devs = ["cuda:{}".format(i) for i in range(world_size)]
     else:
         devs = ["cpu"]
+
+    grad_cam = GradCAM()
     # build model
-    model = model_builder.build(task, task_cfg.model)
+    model = model_builder.build(task, task_cfg.model, grad_cam)
     model.set_device(devs[0])
     # load data
     with Timer(name="Dataloader building", verbose=True):
@@ -97,7 +100,7 @@ if __name__ == '__main__':
     optimizer = optim_builder.build(task, task_cfg.optim, model)
     # build trainer
     trainer = engine_builder.build(task, task_cfg.trainer, "trainer", optimizer,
-                                   dataloader)
+                                   dataloader, None, grad_cam)
     trainer.set_device(devs)
     trainer.resume(parsed_args.resume)
     # trainer.init_train()

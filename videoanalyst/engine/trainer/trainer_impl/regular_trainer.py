@@ -2,6 +2,8 @@
 import copy
 from collections import OrderedDict
 
+import cv2
+
 from loguru import logger
 from tqdm import tqdm
 
@@ -11,7 +13,7 @@ from torch import nn
 from videoanalyst.utils import Timer, move_data_to_device
 
 from ..trainer_base import TRACK_TRAINERS, TrainerBase
-
+import numpy as np
 
 @TRACK_TRAINERS.register
 class RegularTrainer(TrainerBase):
@@ -33,7 +35,7 @@ class RegularTrainer(TrainerBase):
         snapshot="",
     )
 
-    def __init__(self, optimizer, dataloader, monitors=[]):
+    def __init__(self, optimizer, dataloader, monitors=[], gradcam=None):
         r"""
         Crete tester with config and pipeline
 
@@ -50,6 +52,7 @@ class RegularTrainer(TrainerBase):
         self._state["epoch"] = -1  # uninitialized
         self._state["initialized"] = False
         self._state["devices"] = torch.device("cuda:0")
+        self.gradcam = gradcam
 
     def init_train(self, ):
         torch.cuda.empty_cache()
@@ -113,6 +116,13 @@ class RegularTrainer(TrainerBase):
                     self._optimizer.grad_scaler.scale(total_loss).backward()
                 else:
                     total_loss.backward()
+
+            self.gradcam.feature = visualized_data["search_feature"]
+
+            cam_pic = self.gradcam()
+
+            self._monitors[1].update_pic([cam_pic, visualized_data["origin_x"]])
+
             self._optimizer.modify_grad(epoch, iteration)
             with Timer(name="optim", output_dict=time_dict):
                 self._optimizer.step()
@@ -126,9 +136,9 @@ class RegularTrainer(TrainerBase):
 
             for monitor in self._monitors:
                 monitor.update(trainer_data)
-            if self._model._hyper_params["show_featuremap"]:
-                self._monitors[1].update_pic(visualized_data)
-                del visualized_data
+            # if self._model._hyper_params["show_featuremap"]:
+            #     self._monitors[1].update_pic(visualized_data)
+            #     del visualized_data
             del training_data
             print_str = self._state["print_str"]
             pbar.set_description(print_str)

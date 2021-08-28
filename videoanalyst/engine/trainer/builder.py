@@ -10,7 +10,9 @@ from .trainer_base import TASK_TRAINERS, TrainerBase
 
 
 def build(task: str, cfg: CfgNode, optimizer, dataloader,
-          tracker=None) -> TrainerBase:
+          tracker=None,
+          gradcam: object = None,
+          ) -> TrainerBase:
     r"""
     Builder function.
 
@@ -40,7 +42,7 @@ def build(task: str, cfg: CfgNode, optimizer, dataloader,
     if task == "vos":
         trainer = MODULES[name](optimizer, dataloader, monitors, tracker)
     else:
-        trainer = MODULES[name](optimizer, dataloader, monitors)
+        trainer = MODULES[name](optimizer, dataloader, monitors, gradcam=gradcam)
     hps = trainer.get_hps()
     hps = merge_cfg_into_hps(cfg[name], hps)
     trainer.set_hps(hps)
