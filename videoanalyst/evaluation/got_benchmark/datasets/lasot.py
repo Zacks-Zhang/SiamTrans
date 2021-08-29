@@ -65,7 +65,7 @@ class LaSOT(object):
         self.splits = splits
         self.seq_names = []
         for s in subset:
-            self.seq_names.extend(splits[s])
+            self.seq_names.extend(splits)
 
         # Former seq_dirs/anno_files have been replaced by caching mechanism.
         # See _ensure_cache for detail.
@@ -218,7 +218,7 @@ class LaSOT(object):
         subset = self.subset
         for s in subset:
             logger.info("{}: start loading {}".format(LaSOT.__name__, s))
-            seq_names = self.splits[s]
+            seq_names = self.splits
             for seq_name in tqdm(seq_names):
                 seq_dir = os.path.join(root_dir, seq_name[:seq_name.rfind('-')],
                                        seq_name)

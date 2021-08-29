@@ -99,7 +99,7 @@ train:
         SiamTrack:
           pretrain_model_path: ""
           use_transformer: True
-          show_featuremap: True
+          show_featuremap: False
 
 # ==================================================
     data:
@@ -124,27 +124,27 @@ train:
               "GOT10kDataset",
 #              "DETDataset",
 #              "VIDDataset",
-#              "LaSOTDataset",
+              "LaSOTDataset",
               ]
             GOT10kDataset: &GOT10KDATASET_CFG
-              ratio: 0.2
+              ratio: 0.3
               max_diff: 100
               dataset_root: "datasets/GOT-10k"
               subset: "train"
             GOT10kDatasetFixed: *GOT10KDATASET_CFG  # got10k dataset with exclusion of unfixed sequences
             LaSOTDataset:
-              ratio: 0.3
+              ratio: 0.7
               max_diff: 100
               dataset_root: "datasets/LaSOT"
-              subset: "train_test"
-              check_integrity: false
+              subset: "train"
+              check_integrity: False
             VIDDataset:
               ratio: 0.2
               max_diff: 100
               dataset_root: "datasets/ILSVRC2015"
               subset: "train_val"
             COCODataset:
-              ratio: 0.07
+              ratio: 0.1
               dataset_root: "datasets/COCO"
               subsets: ["train2017",] 
             DETDataset:
@@ -208,16 +208,16 @@ train:
           - >
             {
             "name": "LinearLR",
-            "start_lr": 0.000001,
-            "end_lr": 0.001,
-            "max_epoch": 15
+            "start_lr": 0.00001,
+            "end_lr": 0.02,
+            "max_epoch": 20
             }
           - >
             {
             "name": "CosineLR",
-            "start_lr": 0.001,
-            "end_lr": 0.000001,
-            "max_epoch": 39
+            "start_lr": 0.02,
+            "end_lr": 0.00001,
+            "max_epoch": 50
             }
           lr_multiplier:
           - >
