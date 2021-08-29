@@ -72,8 +72,6 @@ class SiamTrack(ModuleBase):
         target_img = training_data["im_z"]
         search_img = training_data["im_x"]
 
-        visualized_data = {}
-
         if self._hyper_params['use_transformer']:
             target_img_nested = nested_tensor_from_tensor(target_img)
             target_img = target_img_nested.tensors
@@ -82,11 +80,8 @@ class SiamTrack(ModuleBase):
 
 
         # backbone feature
-        f_x = self.basemodel(search_img)
         f_z = self.basemodel(target_img)
-
-        visualized_data["template_feature"] = f_z[0, :, :, :]
-        visualized_data["search_feature"] = f_x[0, :, :, :]
+        f_x = self.basemodel(search_img)
 
         if self._hyper_params['use_transformer']:
             # transformer
@@ -143,10 +138,11 @@ class SiamTrack(ModuleBase):
             predict_data["corr_fea"] = corr_fea
 
         if self._hyper_params["show_featuremap"]:
-            # img_grids = vutils.make_grid(c_out[0, :, :, :].unsqueeze(0).permute(1, 0, 2, 3), normalize=True, scale_each=True, nrow=4, padding=1)
-            # visualized_data["fused"] = img_grids
-            visualized_data["origin_z"] = target_img[0, :, :, :]
-            visualized_data["origin_x"] = search_img[0, :, :, :]
+            visualized_data = {}
+            img_grids = vutils.make_grid(c_out[0, :, :, :].unsqueeze(0).permute(1, 0, 2, 3), normalize=True, scale_each=True, nrow=4, padding=1)
+            visualized_data["fused"] = img_grids
+            # visualized_data["origin_z"] = target_img
+            # visualized_data["origin_x"] = search_img
             return predict_data, visualized_data
         return predict_data
 

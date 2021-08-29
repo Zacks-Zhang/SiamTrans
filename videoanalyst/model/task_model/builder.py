@@ -13,9 +13,7 @@ def build(task: str,
           cfg: CfgNode,
           backbone: ModuleBase,
           head: ModuleBase,
-          loss: ModuleBase = None,
-          gradcam: object = None,
-          ):
+          loss: ModuleBase = None):
     r"""
     Builder function.
 
@@ -46,15 +44,10 @@ def build(task: str,
     if task == "track":
         name = cfg.name
         task_module = task_modules[name](backbone, head, loss)
-        # ready for Grad-Cam
-
         hps = task_module.get_hps()
         hps = merge_cfg_into_hps(cfg[name], hps)
         task_module.set_hps(hps)
         task_module.update_params()
-        if gradcam is not None:
-            # back.register_forward_hook(gradcam.features_hook)
-            task_module.feature_fusion.register_full_backward_hook(gradcam.grads_hook)
         return task_module
     else:
         logger.error("task model {} is not completed".format(task))

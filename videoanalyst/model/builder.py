@@ -15,7 +15,6 @@ from .task_model import builder as task_builder
 def build(
         task: str,
         cfg: CfgNode,
-        gradcam: object = None,
 ):
     r"""
     Builder function.
@@ -26,8 +25,7 @@ def build(
         builder task name (track|vos)
     cfg: CfgNode
         node name: model
-    gradcam: object
-        featmap visualization
+
     Returns
     -------
     torch.nn.Module
@@ -38,7 +36,7 @@ def build(
         head = head_builder.build(task, cfg.task_head)
         losses = loss_builder.build(task, cfg.losses)
         task_model = task_builder.build(task, cfg.task_model, backbone, head,
-                                        losses, gradcam)
+                                        losses)
 
     elif task == "vos":
         gml_extractor = backbone_builder.build(task, cfg.gml_extractor)

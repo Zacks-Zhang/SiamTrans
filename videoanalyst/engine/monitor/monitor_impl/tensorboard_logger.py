@@ -3,7 +3,6 @@ import os.path as osp
 from collections import Mapping
 from typing import Dict
 
-import cv2
 from loguru import logger
 
 from torch.utils.tensorboard.writer import SummaryWriter
@@ -12,8 +11,6 @@ from videoanalyst.utils import ensure_dir
 
 from ..monitor_base import TRACK_MONITORS, VOS_MONITORS, MonitorBase
 
-import numpy as np
-from skimage import io
 
 @TRACK_MONITORS.register
 @VOS_MONITORS.register
@@ -79,7 +76,7 @@ class TensorboardLogger(MonitorBase):
         # traverse engine_data and put to scalar
         self._add_scalar_recursively(writer, engine_data, "", global_step)
 
-    def update_pic(self, pic_data):
+    def update_pic(self, pic_data: Dict):
         # from engine state calculate global step
         engine_state = self._state["engine_state"]
         epoch = engine_state["epoch"]
@@ -99,22 +96,8 @@ class TensorboardLogger(MonitorBase):
                 (epoch, max_epoch, iteration, max_iteration))
         writer = self._state["writer"]
 
-        heatmap = cv2.applyColorMap(np.uint8(255 * pic_data[0]), cv2.COLORMAP_JET)
-        heatmap = np.float32(heatmap) / 255
-        heatmap = heatmap[..., ::-1]  # gbr to rgb
-
-        # 合并heatmap到原始图像
-        # cam = heatmap + np.float32(pic_data[1].permute(1,2,0).cpu())
-        heatmap = (heatmap * 255).astype(np.uint8)
-        # cam -= np.max(np.min(cam), 0)
-        # cam /= np.max(cam)
-        # cam = (cam * 255.).astype(np.uint8)
-
-        # io.imsave("test.jpg", cam)
-        writer.add_image("origin", pic_data[1], global_step=global_step, dataformats="CHW")
-        writer.add_image("featmap", heatmap, global_step=global_step, dataformats="HWC")
         # traverse engine_data and put to scalar
-        # writer.add_image("fused feature", pic_data["fused"], global_step=global_step, dataformats="CHW")
+        writer.add_image("fused feature", pic_data["fused"], global_step=global_step, dataformats="CHW")
         # writer.add_image("origin template pic", pic_data["origin_z"], global_step=global_step, dataformats="NCHW")
         # writer.add_image("origin search pic", pic_data["origin_x"], global_step=global_step, dataformats="NCHW")
 
