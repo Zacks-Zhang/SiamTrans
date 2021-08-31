@@ -211,15 +211,15 @@ train:
             {
             "name": "LinearLR",
             "start_lr": 0.000001,
-            "end_lr": 0.001,
-            "max_epoch": 30
+            "end_lr": 0.05,
+            "max_epoch": 5
             }
           - >
             {
             "name": "CosineLR",
-            "start_lr": 0.001,
+            "start_lr": 0.05,
             "end_lr": 0.000001,
-            "max_epoch": 39
+            "max_epoch": 49
             }
           lr_multiplier:
           - >
@@ -241,21 +241,28 @@ train:
           - >
             {
             "name": "isConv",
-            "regex": "basemodel.*\\.conv\\.",
+            "regex": "basemodel.*",
             "epoch": 0,
             "freezed": true
             }
           - >
             {
-            "name": "isConvStage4",
-            "regex": "basemodel\\.Mixed_6.*\\.conv\\.",
-            "epoch": 10,
+            "name": "isConvStage2",
+            "regex": "basemodel\\.layer2.*",
+            "epoch": 30,
             "freezed": false
             }
           - >
             {
             "name": "isConvStage3",
-            "regex": "basemodel\\.Mixed_5.*\\.conv\\.",
-            "epoch": 10,
+            "regex": "basemodel\\.layer3.*",
+            "epoch": 30,
+            "freezed": false
+            }
+          - >
+            {
+            "name": "isConvStage4",
+            "regex": "basemodel\\.layer4.*",
+            "epoch": 30,
             "freezed": false
             }

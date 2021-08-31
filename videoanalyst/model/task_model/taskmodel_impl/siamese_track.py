@@ -83,10 +83,10 @@ class SiamTrack(ModuleBase):
         # backbone feature
         f_z = self.basemodel(target_img)
         f_x = self.basemodel(search_img)
-        
+
         if self._hyper_params['use_transformer']:
             # transformer
-            # down channels and crop
+            # down channels
             f_z = self.adjust(f_z)
             f_x = self.adjust(f_x)
             # mask
@@ -204,6 +204,8 @@ class SiamTrack(ModuleBase):
 
                 if self._hyper_params['use_transformer']:
                     # transformer
+                    # down channels
+                    f_z = self.adjust(f_z)
                     # mask
                     mask_z = F.interpolate(target_img_nested.mask[None].float(), size=f_z.shape[-2:]).to(torch.bool)[0]
                     # position encoding
@@ -253,6 +255,9 @@ class SiamTrack(ModuleBase):
                     f_x = self.basemodel(search_img)
 
                     if self._hyper_params['use_transformer']:
+                        # down channels
+                        f_x = self.adjust(f_x)
+                        # mask
                         mask_z = f_z_nested.mask
                         mask_x = F.interpolate(search_img_nested.mask[None].float(), size=f_x.shape[-2:]).to(torch.bool)[0]
                         # position encoding
