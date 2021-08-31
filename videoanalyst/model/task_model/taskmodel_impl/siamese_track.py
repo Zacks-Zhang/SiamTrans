@@ -14,6 +14,7 @@ from videoanalyst.model.module_base import ModuleBase
 from videoanalyst.model.task_model.taskmodel_base import (TRACK_TASKMODELS,
                                                           VOS_TASKMODELS)
 from videoanalyst.model.task_model.taskmodel_impl.transformer.featurefusion_network import FeatureFusionNetwork
+from videoanalyst.model.task_model.taskmodel_impl.transformer.neck import AdjustAllLayer
 from videoanalyst.model.task_model.taskmodel_impl.transformer.utils import build_position_encoding, \
     nested_tensor_from_tensor, nested_tensor_from_tensor_2, NestedTensor
 
@@ -82,9 +83,12 @@ class SiamTrack(ModuleBase):
         # backbone feature
         f_z = self.basemodel(target_img)
         f_x = self.basemodel(search_img)
-
+        
         if self._hyper_params['use_transformer']:
             # transformer
+            # down channels and crop
+            f_z = self.adjust(f_z)
+            f_x = self.adjust(f_x)
             # mask
             mask_z = F.interpolate(target_img_nested.mask[None].float(), size=f_z.shape[-2:]).to(torch.bool)[0]
             mask_x = F.interpolate(search_img_nested.mask[None].float(), size=f_x.shape[-2:]).to(torch.bool)[0]
@@ -355,6 +359,8 @@ class SiamTrack(ModuleBase):
             channels = self._hyper_params['head_width']
             self.conv_to_reg = conv_bn_relu(channels, channels, 1, 5, 0, has_relu=False)
             self.conv_to_cls = conv_bn_relu(channels, channels, 1, 5, 0, has_relu=False)
+
+            self.adjust = AdjustAllLayer([2048], [256])
 
         # feature adjustment
         self.r_z_k = conv_bn_relu(head_width, head_width, 1, 3, 0, has_relu=False)
