@@ -84,14 +84,17 @@ class ExperimentOTB(object):
             # record results
             self._record(record_file, boxes, times)
 
-    def report(self, tracker_names, plot_curves=True):
+    def report(self, tracker_names, epoch=-1, plot_curves=True):
         assert isinstance(tracker_names, (list, tuple))
 
         # assume tracker_names[0] is your tracker
         report_dir = os.path.join(self.report_dir, tracker_names[0])
         if not os.path.isdir(report_dir):
             os.makedirs(report_dir)
-        report_file = os.path.join(report_dir, 'performance.json')
+        if (epoch != -1):
+            report_file = os.path.join(report_dir, 'e{}_performance.json'.format(epoch))
+        else:
+            report_file = os.path.join(report_dir, 'performance.json')
 
         performance = {}
         for name in tracker_names:

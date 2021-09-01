@@ -65,13 +65,15 @@ if __name__ == '__main__':
     # resolve config
     root_cfg = root_cfg.test
     task, task_cfg = specify_task(root_cfg)
-    task_cfg.freeze()
+    # task_cfg.freeze()
 
     torch.multiprocessing.set_start_method('spawn', force=True)
 
-    if task == 'track':
-        testers = build_siamfcpp_tester(task_cfg)
-    elif task == 'vos':
-        testers = build_sat_tester(task_cfg)
-    for tester in testers:
-        tester.test()
+    for epoch in range(41, 50):
+        task_cfg.model.task_model.SiamTrack.pretrain_model_path = "snapshots/siamfcpp_googlenet-fulldata-trans/epoch-{}.pkl".format(epoch)
+        if task == 'track':
+            testers = build_siamfcpp_tester(task_cfg)
+        elif task == 'vos':
+            testers = build_sat_tester(task_cfg)
+        for tester in testers:
+            tester.test(epoch=epoch)
