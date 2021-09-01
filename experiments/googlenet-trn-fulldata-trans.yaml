@@ -105,7 +105,7 @@ train:
     data:
       exp_name: *TRAIN_NAME
       exp_save: *TRAIN_SAVE
-      num_epochs: &NUM_EPOCHS 40
+      num_epochs: &NUM_EPOCHS 50
       minibatch: &MINIBATCH 32
       num_workers: 8 # 32
       nr_image_per_epoch: &NR_IMAGE_PER_EPOCH 150000

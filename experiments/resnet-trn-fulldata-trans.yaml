@@ -107,11 +107,11 @@ train:
     data:
       exp_name: *TRAIN_NAME
       exp_save: *TRAIN_SAVE
-      num_epochs: &NUM_EPOCHS 40
-      minibatch: &MINIBATCH 2
+      num_epochs: &NUM_EPOCHS 50
+      minibatch: &MINIBATCH 24
       num_workers: 8 # 32
-      nr_image_per_epoch: &NR_IMAGE_PER_EPOCH 150000
-      pin_memory: false
+      nr_image_per_epoch: &NR_IMAGE_PER_EPOCH 100000
+      pin_memory: True
       datapipeline:
         name: "RegularDatapipeline"
       sampler:
@@ -126,16 +126,16 @@ train:
               "GOT10kDataset",
 #              "DETDataset",
 #              "VIDDataset",
-#              "LaSOTDataset",
+              "LaSOTDataset",
               ]
             GOT10kDataset: &GOT10KDATASET_CFG
-              ratio: 0.2
+              ratio: 0.3
               max_diff: 100
               dataset_root: "datasets/GOT-10k"
               subset: "train"
             GOT10kDatasetFixed: *GOT10KDATASET_CFG  # got10k dataset with exclusion of unfixed sequences
             LaSOTDataset:
-              ratio: 0.3
+              ratio: 0.7
               max_diff: 100
               dataset_root: "datasets/LaSOT"
               subset: "train_test"
@@ -146,7 +146,7 @@ train:
               dataset_root: "datasets/ILSVRC2015"
               subset: "train_val"
             COCODataset:
-              ratio: 0.07
+              ratio: 0.1
               dataset_root: "datasets/COCO"
               subsets: ["train2017",] 
             DETDataset:
@@ -241,28 +241,28 @@ train:
           - >
             {
             "name": "isConv",
-            "regex": "basemodel.*",
+            "regex": "basemodel\\.*",
             "epoch": 0,
             "freezed": true
             }
           - >
             {
             "name": "isConvStage2",
-            "regex": "basemodel\\.layer2.*",
+            "regex": "basemodel\\.layer2\\.*",
             "epoch": 30,
             "freezed": false
             }
           - >
             {
             "name": "isConvStage3",
-            "regex": "basemodel\\.layer3.*",
+            "regex": "basemodel\\.layer3\\.*",
             "epoch": 30,
             "freezed": false
             }
           - >
             {
             "name": "isConvStage4",
-            "regex": "basemodel\\.layer4.*",
+            "regex": "basemodel\\.layer4\\.*",
             "epoch": 30,
             "freezed": false
             }
