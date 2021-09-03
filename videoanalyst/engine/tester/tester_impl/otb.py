@@ -45,7 +45,7 @@ class OTBTester(TesterBase):
             all_devs = [torch.device("cpu")]
         self._state["all_devs"] = all_devs
 
-    def test(self, ):
+    def test(self, epoch=-1):
         tracker_name = self._hyper_params["exp_name"]
         all_devs = self._state["all_devs"]
         nr_devs = len(all_devs)
@@ -83,7 +83,7 @@ class OTBTester(TesterBase):
                 for p in procs:
                     p.join()
             # evalutate
-            performance = experiment.report([tracker_name], plot_curves=False)
+            performance = experiment.report([tracker_name], epoch=epoch, plot_curves=False)
 
         test_result_dict = dict()
         if performance is not None:

@@ -321,7 +321,7 @@ class Bottleneck(nn.Module):
         self.stride = stride
 
     def forward(self, x):
-        residual = x
+        # residual = x
 
         out = self.conv1(x)
         out = self.bn1(out)
@@ -335,9 +335,9 @@ class Bottleneck(nn.Module):
         out = self.bn3(out)
 
         if self.downsample is not None:
-            residual = self.downsample(x)
+            x = self.downsample(x)
 
-        out += residual
+        out += x
 
         out = self.relu(out)
 
@@ -435,12 +435,12 @@ class ResNet50(ModuleBase):
         p3 = self.layer3(p2)
         # conv5
         p4 = self.layer4(p3)
-        out = [x_, p1, p2, p3, p4]
-        out = [out[i] for i in self.used_layers]
-        if len(out) == 1:
-            return out[0]
-        else:
-            return out
+        # out = [x_, p1, p2, p3, p4]
+        # out = [out[i] for i in self.used_layers]
+        # if len(out) == 1:
+        #     return out[0]
+        # else:
+        return p4
 
 
 

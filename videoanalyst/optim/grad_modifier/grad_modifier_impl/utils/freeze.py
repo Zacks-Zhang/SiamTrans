@@ -61,6 +61,8 @@ def dynamic_freeze(module: nn.Module,
         for k, v in module.named_parameters():
             if (compiled_regex.search(k) is not None):
                 v.requires_grad = requires_grad
+                # if requires_grad:
+                #     print(k)
 
 
 # def apply_freeze_schedule(module, epoch, schedule_list, verbose=True):
