@@ -196,11 +196,12 @@ train:
 # ==================================================
     optim:
       optimizer:
-        name: "SGD"
-        SGD:
+        name: "AdamW"
+        AdamW:
           # to adjust learning rate, please modify "start_lr" and "end_lr" in lr_policy module bellow
-          momentum: 0.9
+          betas: [0.9, 0.999]
           weight_decay: 0.0001
+          eps: 1e-8
           minibatch: *MINIBATCH
           nr_image_per_epoch: *NR_IMAGE_PER_EPOCH
           lr_policy:
@@ -208,16 +209,16 @@ train:
           - >
             {
             "name": "LinearLR",
-            "start_lr": 0.00001,
-            "end_lr": 0.02,
-            "max_epoch": 20
+            "start_lr": 0.0001,
+            "end_lr": 0.0001,
+            "max_epoch": 1
             }
           - >
             {
             "name": "CosineLR",
-            "start_lr": 0.02,
-            "end_lr": 0.00001,
-            "max_epoch": 50
+            "start_lr": 0.0001,
+            "end_lr": 0.0001,
+            "max_epoch": 1
             }
           lr_multiplier:
           - >
@@ -247,13 +248,13 @@ train:
             {
             "name": "isConvStage4",
             "regex": "basemodel\\.Mixed_6.*\\.conv\\.",
-            "epoch": 30,
+            "epoch": 20,
             "freezed": false
             }
           - >
             {
             "name": "isConvStage3",
             "regex": "basemodel\\.Mixed_5.*\\.conv\\.",
-            "epoch": 30,
+            "epoch": 20,
             "freezed": false
             }

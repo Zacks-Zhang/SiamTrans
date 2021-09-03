@@ -126,7 +126,7 @@ train:
               "GOT10kDataset",
 #              "DETDataset",
 #              "VIDDataset",
-#              "LaSOTDataset",
+              "LaSOTDataset",
               ]
             GOT10kDataset: &GOT10KDATASET_CFG
               ratio: 0.2
