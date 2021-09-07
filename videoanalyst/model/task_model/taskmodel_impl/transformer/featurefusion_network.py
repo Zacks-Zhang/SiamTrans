@@ -16,7 +16,7 @@ from torch import nn, Tensor
 
 class FeatureFusionNetwork(nn.Module):
 
-    def __init__(self, d_model=512, nhead=8, num_featurefusion_layers=4,
+    def __init__(self, d_model=512, nhead=4, num_featurefusion_layers=4,
                  dim_feedforward=2048, dropout=0.1, activation="relu"):
         super().__init__()
 
@@ -242,15 +242,15 @@ class FeatureFusionLayer(nn.Module):
 
         src1 = src1 + self.dropout12(src12)
         src1 = self.norm12(src1)
-        src12 = self.linear12(self.dropout1(self.activation1(self.linear11(src1))))
-        src1 = src1 + self.dropout13(src12)
-        src1 = self.norm13(src1)
+        # src12 = self.linear12(self.dropout1(self.activation1(self.linear11(src1))))
+        # src1 = src1 + self.dropout13(src12)
+        # src1 = self.norm13(src1)
 
         src2 = src2 + self.dropout22(src22)
         src2 = self.norm22(src2)
-        src22 = self.linear22(self.dropout2(self.activation2(self.linear21(src2))))
-        src2 = src2 + self.dropout23(src22)
-        src2 = self.norm23(src2)
+        # src22 = self.linear22(self.dropout2(self.activation2(self.linear21(src2))))
+        # src2 = src2 + self.dropout23(src22)
+        # src2 = self.norm23(src2)
 
         return src1, src2
 
