@@ -57,7 +57,7 @@ class AdamW(OptimizerBase):
         params = self._state["params"]
         kwargs = self._hyper_params
         valid_keys = self.extra_hyper_params.keys()
-        kwargs = {k: kwargs[k] for k in valid_keys}
+        kwargs = {k: kwargs[k] if not isinstance(kwargs[k], tuple) else list(kwargs[k]) for k in valid_keys }
         self._optimizer = optim.AdamW(params, **kwargs)
 
 AdamW.default_hyper_params.update(AdamW.extra_hyper_params)

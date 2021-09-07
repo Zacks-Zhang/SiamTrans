@@ -4,8 +4,8 @@ test:
     exp_save: &TEST_SAVE "logs"
     model:
       backbone:
-        name: "Inception3"
-        Inception3:
+        name: "ResNet50"
+        ResNet50:
           pretrain_model_path: ""
 #          crop_pad: 4
 #          pruned: True
@@ -22,7 +22,7 @@ test:
       task_model:
         name: "SiamTrack"
         SiamTrack:
-          pretrain_model_path: "snapshots/resnet-fulldata-trans/epoch-1.pkl"
+          pretrain_model_path: "snapshots/resnet-fulldata-trans/epoch-150.pkl"
           use_transformer: True
 
     pipeline:
@@ -34,10 +34,10 @@ test:
         num_conv3x3: 2
     tester:
       names: [
-          "VOTTester",
+#          "VOTTester",
 #          "TrackingNetTester",
 #          "GOT10kTester",
-#          "OTBTester"
+          "OTBTester"
       ] # (VOTTester|GOT10kTester|LaSOTTester|OTBTester)
       VOTTester:
         exp_name: *TEST_NAME
@@ -61,7 +61,7 @@ test:
         subsets: [ "otb100" ]
 train:
   track:
-    exp_name: &TRAIN_NAME "siamfcpp_googlenet-fulldata-trans"
+    exp_name: &TRAIN_NAME "resnet-fulldata-trans"
     exp_save: &TRAIN_SAVE "snapshots"
     num_processes: 1
     model:
@@ -101,17 +101,17 @@ train:
         SiamTrack:
           pretrain_model_path: ""
           use_transformer: True
-          show_featuremap: True
+          show_featuremap: False
 
 # ==================================================
     data:
       exp_name: *TRAIN_NAME
       exp_save: *TRAIN_SAVE
-      num_epochs: &NUM_EPOCHS 50
-      minibatch: &MINIBATCH 24
+      num_epochs: &NUM_EPOCHS 200
+      minibatch: &MINIBATCH 8
       num_workers: 8 # 32
-      nr_image_per_epoch: &NR_IMAGE_PER_EPOCH 100000
-      pin_memory: True
+      nr_image_per_epoch: &NR_IMAGE_PER_EPOCH 36000
+      pin_memory: False
       datapipeline:
         name: "RegularDatapipeline"
       sampler:
@@ -138,7 +138,7 @@ train:
               ratio: 0.7
               max_diff: 100
               dataset_root: "datasets/LaSOT"
-              subset: "train_test"
+              subset: "train"
               check_integrity: false
             VIDDataset:
               ratio: 0.2
@@ -199,6 +199,11 @@ train:
     optim:
       optimizer:
         name: "SGD"
+#        AdamW:
+#          # to adjust learning rate, please modify "start_lr" and "end_lr" in lr_policy module bellow
+#          betas: [0.9, 0.999]
+#          weight_decay: 0.0001
+#          eps: 1e-8
         SGD:
           # to adjust learning rate, please modify "start_lr" and "end_lr" in lr_policy module bellow
           momentum: 0.9
@@ -210,16 +215,16 @@ train:
           - >
             {
             "name": "LinearLR",
-            "start_lr": 0.000001,
-            "end_lr": 0.05,
-            "max_epoch": 5
+            "start_lr": 0.0001,
+            "end_lr": 0.001,
+            "max_epoch": 10
             }
           - >
             {
-            "name": "CosineLR",
-            "start_lr": 0.05,
-            "end_lr": 0.000001,
-            "max_epoch": 49
+            "name": "LinearLR",
+            "start_lr": 0.001,
+            "end_lr": 0.0001,
+            "max_epoch": 200
             }
           lr_multiplier:
           - >
@@ -249,20 +254,20 @@ train:
             {
             "name": "isConvStage2",
             "regex": "basemodel\\.layer2\\.*",
-            "epoch": 30,
+            "epoch": 10,
             "freezed": false
             }
           - >
             {
             "name": "isConvStage3",
             "regex": "basemodel\\.layer3\\.*",
-            "epoch": 30,
+            "epoch": 10,
             "freezed": false
             }
           - >
             {
             "name": "isConvStage4",
             "regex": "basemodel\\.layer4\\.*",
-            "epoch": 30,
+            "epoch": 10,
             "freezed": false
             }

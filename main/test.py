@@ -69,8 +69,8 @@ if __name__ == '__main__':
 
     torch.multiprocessing.set_start_method('spawn', force=True)
 
-    for epoch in range(41, 50):
-        task_cfg.model.task_model.SiamTrack.pretrain_model_path = "snapshots/siamfcpp_googlenet-fulldata-trans/epoch-{}.pkl".format(epoch)
+    for epoch in range(50, 151, 5):
+        task_cfg.model.task_model.SiamTrack.pretrain_model_path = "snapshots/resnet-fulldata-trans/epoch-{}.pkl".format(epoch)
         if task == 'track':
             testers = build_siamfcpp_tester(task_cfg)
         elif task == 'vos':
