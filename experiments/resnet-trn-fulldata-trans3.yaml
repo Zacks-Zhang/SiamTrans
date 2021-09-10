@@ -1,6 +1,6 @@
 test:
   track:
-    exp_name: &TEST_NAME "resnet-fulldata-trans"
+    exp_name: &TEST_NAME "resnet-fulldata-trans3"
     exp_save: &TEST_SAVE "logs"
     model:
       backbone:
@@ -107,10 +107,10 @@ train:
     data:
       exp_name: *TRAIN_NAME
       exp_save: *TRAIN_SAVE
-      num_epochs: &NUM_EPOCHS 100
+      num_epochs: &NUM_EPOCHS 30
       minibatch: &MINIBATCH 24
       num_workers: 8 # 32
-      nr_image_per_epoch: &NR_IMAGE_PER_EPOCH 36000
+      nr_image_per_epoch: &NR_IMAGE_PER_EPOCH 150000
       pin_memory: False
       datapipeline:
         name: "RegularDatapipeline"
@@ -216,13 +216,13 @@ train:
             {
             "name": "LinearLR",
             "start_lr": 0.0001,
-            "end_lr": 0.005,
+            "end_lr": 0.05,
             "max_epoch": 10
             }
           - >
             {
-            "name": "LinearLR",
-            "start_lr": 0.005,
+            "name": "CosineLR",
+            "start_lr": 0.05,
             "end_lr": 0.0001,
             "max_epoch": 100
             }
@@ -254,14 +254,14 @@ train:
             {
             "name": "isConvStage2",
             "regex": "basemodel\\.layer2\\.*",
-            "epoch": 30,
+            "epoch": 10,
             "freezed": false
             }
           - >
             {
             "name": "isConvStage3",
             "regex": "basemodel\\.layer3\\.*",
-            "epoch": 20,
+            "epoch": 10,
             "freezed": false
             }
           - >

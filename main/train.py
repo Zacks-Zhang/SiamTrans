@@ -19,12 +19,12 @@ from videoanalyst.utils import Timer, ensure_dir
 
 cv2.setNumThreads(4)
 
-# torch.backends.cudnn.enabled = False
+torch.backends.cudnn.enabled = True
 
 # pytorch reproducibility
 # https://pytorch.org/docs/stable/notes/randomness.html#cudnn
-torch.backends.cudnn.benchmark = True
-torch.backends.cudnn.deterministic = False
+torch.backends.cudnn.benchmark = False
+torch.backends.cudnn.deterministic = True
 
 
 def make_parser():
