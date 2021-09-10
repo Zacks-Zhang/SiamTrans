@@ -94,8 +94,9 @@ class SiamTrack(ModuleBase):
             mask_z = F.interpolate(target_img_nested.mask[None].float(), size=f_z.shape[-2:]).to(torch.bool)[0]
             # mask_x = F.interpolate(search_img_nested.mask[None].float(), size=f_x.shape[-2:]).to(torch.bool)[0]
             # position encoding
-            pos_z = []
-            pos_z.append(self.pos_encoding(NestedTensor(f_z, mask_z)).to(f_z.dtype))
+            # pos_z = []
+            # pos_z.append(self.pos_encoding(NestedTensor(f_z, mask_z)).to(f_z.dtype))
+            pos_z = self.pos_encoding(NestedTensor(f_z, mask_z)).to(f_z.dtype)
             # pos_x = []
             # pos_x.append(self.pos_encoding(NestedTensor(f_x, mask_x)).to(f_x.dtype))
             #
@@ -367,7 +368,7 @@ class SiamTrack(ModuleBase):
             self.conv_to_reg = conv_bn_relu(channels, channels, 1, 5, 0, has_relu=False)
             self.conv_to_cls = conv_bn_relu(channels, channels, 1, 5, 0, has_relu=False)
 
-            # self.adjust = AdjustAllLayer([2048], [256])
+            self.adjust = AdjustAllLayer([2048], [256])
 
             self.transformer = Transformer(d_model=256, nhead=1, num_layers=1)
 
