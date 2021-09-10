@@ -14,7 +14,6 @@ from videoanalyst.model.module_base import ModuleBase
 from videoanalyst.model.task_model.taskmodel_base import (TRACK_TASKMODELS,
                                                           VOS_TASKMODELS)
 from videoanalyst.model.task_model.taskmodel_impl.transformer.featurefusion_network import FeatureFusionNetwork
-from videoanalyst.model.task_model.taskmodel_impl.transformer.featurefusion_network2 import Transformer
 from videoanalyst.model.task_model.taskmodel_impl.transformer.neck import AdjustAllLayer
 from videoanalyst.model.task_model.taskmodel_impl.transformer.utils import build_position_encoding, \
     nested_tensor_from_tensor, nested_tensor_from_tensor_2, NestedTensor
@@ -92,15 +91,15 @@ class SiamTrack(ModuleBase):
             f_x = self.adjust(f_x)
             # mask
             mask_z = F.interpolate(target_img_nested.mask[None].float(), size=f_z.shape[-2:]).to(torch.bool)[0]
-            # mask_x = F.interpolate(search_img_nested.mask[None].float(), size=f_x.shape[-2:]).to(torch.bool)[0]
+            mask_x = F.interpolate(search_img_nested.mask[None].float(), size=f_x.shape[-2:]).to(torch.bool)[0]
             # position encoding
             pos_z = []
             pos_z.append(self.pos_encoding(NestedTensor(f_z, mask_z)).to(f_z.dtype))
-            # pos_x = []
-            # pos_x.append(self.pos_encoding(NestedTensor(f_x, mask_x)).to(f_x.dtype))
-            #
-            # assert mask_z is not None
-            # assert mask_x is not None
+            pos_x = []
+            pos_x.append(self.pos_encoding(NestedTensor(f_x, mask_x)).to(f_x.dtype))
+
+            assert mask_z is not None
+            assert mask_x is not None
 
             # 使用transformer进行特征融合的话
             # f_z和f_x会提前融合成一个特征图
@@ -109,13 +108,12 @@ class SiamTrack(ModuleBase):
             f_z_shape = f_z.shape
             f_x_shape = f_x.shape
             # feature enhance and fuse
-            # f_z, f_x = self.feature_fusion(f_z, mask_z,
-            #                          f_x, mask_x,
-            #                          pos_z[-1], pos_x[-1])  # [625, 2, 256]
-            f_z, f_x = self.transformer(f_z, f_x, pos_z)
+            f_z, f_x = self.feature_fusion(f_z, mask_z,
+                                     f_x, mask_x,
+                                     pos_z[-1], pos_x[-1])  # [625, 2, 256]
 
-            # f_z = f_z.permute(1, 2, 0).reshape(f_z_shape)
-            # f_x = f_x.permute(1, 2, 0).reshape(f_x_shape)
+            f_z = f_z.permute(1, 2, 0).reshape(f_z_shape)
+            f_x = f_x.permute(1, 2, 0).reshape(f_x_shape)
 
         #     # 生成回归和分类分支特征
         #     # feature adjust
@@ -367,9 +365,7 @@ class SiamTrack(ModuleBase):
             self.conv_to_reg = conv_bn_relu(channels, channels, 1, 5, 0, has_relu=False)
             self.conv_to_cls = conv_bn_relu(channels, channels, 1, 5, 0, has_relu=False)
 
-            # self.adjust = AdjustAllLayer([2048], [256])
-
-            self.transformer = Transformer(d_model=256, nhead=1, num_layers=1)
+            self.adjust = AdjustAllLayer([2048], [256])
 
         # feature adjustment
         self.r_z_k = conv_bn_relu(head_width, head_width, 1, 3, 0, has_relu=False)
