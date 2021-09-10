@@ -29,10 +29,10 @@ class Transformer(nn.Module):
         encoded_memory, _ = self.encoder(train_feat, pos=None)
 
         ## decoder
-        _, encoded_feat = self.decoder(train_feat, memory=encoded_memory, pos=train_label,
+        _, encoded_feat = self.decoder(train_feat.unsqueeze(0), memory=encoded_memory, pos=train_label,
                                            query_pos=None)
 
-        _, decoded_feat = self.decoder(test_feat, memory=encoded_memory, pos=train_label,
+        _, decoded_feat = self.decoder(test_feat.unsqueeze(0), memory=encoded_memory, pos=train_label,
                                            query_pos=None)
 
         return encoded_feat, decoded_feat
@@ -162,11 +162,10 @@ class TransformerDecoder(nn.Module):
         batch, dim, h, w = tgt.shape
 
         if pos is not None:
-            pass
-            # batch, h, w = pos.shape
-            # pos = pos.view(batch, 1, -1).permute(2, 0, 1)
-            # pos = pos.reshape(-1, batch, 1)
-            # pos = pos.repeat(1, 1, dim)
+            batch, h, w = pos.shape
+            pos = pos.view(batch, 1, -1).permute(2, 0, 1)
+            pos = pos.reshape(-1, batch, 1)
+            pos = pos.repeat(1, 1, dim)
 
         tgt = tgt.view(batch, dim, -1).permute(2, 0, 1)
         tgt = tgt.reshape(-1, batch, dim)
